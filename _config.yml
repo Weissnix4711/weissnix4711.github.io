@@ -18,21 +18,138 @@
 # You can create any custom variable you would like, and they will be accessible
 # in the templates via {{ site.myvariable }}.
 
-title: Your awesome title
-email: your-email@example.com
-description: >- # this means to ignore newlines until "baseurl:"
-  Write an awesome description for your new site here. You can edit this
-  line in _config.yml. It will appear in your document head meta (for
-  Google search results) and in your feed.xml site description.
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "" # the base hostname & protocol for your site, e.g. http://example.com
-twitter_username: jekyllrb
-github_username:  jekyll
+# ----------------------------------- Basic ---------------------------------- #
 
-# Build settings
-theme: minima
+# Basic
+title: Thomas Aldrian
+subtitle: "My blog"
+description: >- # this means to ignore newlines until "baseurl:"
+  Welcome to my blog!
+
+name: "Thomas Aldrian"
+email: dev.aldrian@gmail.com
+
+# URLs
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://weissnix4711.github.io" # the base hostname & protocol for your site, e.g. http://example.com
+repository: "weissnix4711/weissnix4711.github.io"
+
+# Locale
+locale: "en-GB"
+
+# Permalink format
+permalink: pretty
+
+# ----------------------------------- Theme ---------------------------------- #
+
+# Minimal mistakes theme
+theme: minimal-mistakes-jekyll
+minimal_mistakes_skin: "dark"
+title_separator: "|"
+breadcrumbs: true
+search: true
+
+# Site logo
+logo: "/assets/images/pfp.png"
+
+# Comments via utterances
+comments:
+  provider: "utterances"
+  utterances:
+    theme: "github-dark"
+    issue_term: "pathname"
+
+# Default author for posts
+author:
+  name: "Thomas Aldrian"
+  avatar: "/assets/images/pfp.png"
+  bio: "Sometimes writes good code."
+  location: "Somewhere"
+  links:
+    - label: "Discord"
+      icon: "fab fa-fw fa-discord"
+      url: "https://pastebin.com/mdCSXtNJ"
+    - label: "Reddit"
+      icon: "fab fa-fw fa-reddit"
+      url: "https://reddit.com/u/Weissnix_4711"
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/Weissnix4711"
+    - label: "Twitter"
+      icon: "fab fa-fw fa-twitter"
+      url: "https://twitter.com/Weissnix4711"
+    - label: "dev.aldrian@gmail.com"
+      icon: "fas fa-fw fa-envelope"
+      url: "mailto:dev.aldrian@gmail.com"
+
+# Archives (using jekyll-archives)
+category_archive:
+  type: jekyll-archives
+  path: /categories/
+tag_archive:
+  type: jekyll-archives
+  path: /tags/
+
+# Site footer
+footer:
+  links:
+    - label: "GitHub"
+      icon: "fab fa-fw fa-github"
+      url: "https://github.com/Weissnix4711/weissnix4711.github.io"
+
+# ---------------------------------- Plugins --------------------------------- #
+
+# Plugins
 plugins:
   - jekyll-feed
+  - jekyll-include-cache
+  - jekyll-paginate
+  - jekyll-archives
+
+# Pagination
+paginate: 5
+paginate_path: "/page:num/"
+
+# Archives
+jekyll-archives:
+  enabled:
+    - categories
+    - tags
+  layouts:
+    category: archive-taxonomy
+    tag: archive-taxonomy
+  permalinks:
+    category: /categories/:name/
+    tag: /tags/:name/
+
+# ------------------------- Defaults and Collections ------------------------- #
+
+# Defaults
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: single
+      toc: true
+      author_profile: true
+      read_time: true
+      comments: true
+      share: true
+      related: true
+  - scope:
+      path: ""
+      type: pages
+    values:
+      layout: single
+      toc: true
+      author_profile: false
+
+# --------------------------- Includes and Excludes -------------------------- #
+
+# Include
+include:
+  - "_pages"
 
 # Exclude from processing.
 # The following items will not be processed, by default.
@@ -42,14 +159,15 @@ plugins:
 # Excluded items can be processed by explicitly listing the directories or
 # their entries' file path in the `include:` list.
 #
-# exclude:
-#   - .sass-cache/
-#   - .jekyll-cache/
-#   - gemfiles/
-#   - Gemfile
-#   - Gemfile.lock
-#   - node_modules/
-#   - vendor/bundle/
-#   - vendor/cache/
-#   - vendor/gems/
-#   - vendor/ruby/
+exclude:
+  - .sass-cache/
+  - .jekyll-cache/
+  - gemfiles/
+  - Gemfile
+  - Gemfile.lock
+  - node_modules/
+  - vendor/bundle/
+  - vendor/cache/
+  - vendor/gems/
+  - vendor/ruby/
+  - CNAME
