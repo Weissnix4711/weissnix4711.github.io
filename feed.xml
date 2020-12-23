@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.1.1">Jekyll</generator><link href="https://weissnix4711.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://weissnix4711.github.io/" rel="alternate" type="text/html" /><updated>2020-12-23T20:40:28+00:00</updated><id>https://weissnix4711.github.io/feed.xml</id><title type="html">Thomas Aldrian</title><subtitle>Welcome to my blog!</subtitle><author><name>Thomas Aldrian</name></author><entry><title type="html">Hacking Sonoff T4EU1C with ESPHOME</title><link href="https://weissnix4711.github.io/smart-home/2020/12/13/sonoff-t4eu1c/" rel="alternate" type="text/html" title="Hacking Sonoff T4EU1C with ESPHOME" /><published>2020-12-13T00:00:00+00:00</published><updated>2020-12-13T00:00:00+00:00</updated><id>https://weissnix4711.github.io/smart-home/2020/12/13/sonoff-t4eu1c</id><content type="html" xml:base="https://weissnix4711.github.io/smart-home/2020/12/13/sonoff-t4eu1c/">&lt;h1 id=&quot;whats-this-a-no-neutral-wifi-controlled-smart-switch-made-by-sonoff&quot;&gt;What’s this? A no-neutral WiFi-controlled smart switch made by Sonoff?&lt;/h1&gt;
+
+&lt;p&gt;Yep, that’s right. Just like the previous TX models &lt;em&gt;(Touch, T1, new-T1, T2, and T3)&lt;/em&gt;, the T4 can be wirelessly controlled with the eWeLink app, or the touch sensor, and has a small LED to help you locate the switch in the dark. And best of all, there is no neutral connection required - only live in, and out (to the light bulb). Want to know more about how it works? I suggest watching &lt;a href=&quot;https://www.youtube.com/watch?v=VNYcD7MEp4A&quot;&gt;this YouTube video by SuperHouseTV&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Before you go out and buy one for yourself, it’s important to note the few cons which exist with the new T4’s.&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Firstly, they will (most likely) not work with any device which &lt;em&gt;isn’t&lt;/em&gt; as light bulb. You cannot use them as a general-purpose smart switch.&lt;/li&gt;
+  &lt;li&gt;Also, LEDs and CFLs &lt;em&gt;are&lt;/em&gt; supported, but require you to connect the included “anti flicker module” in parallel to the bulb(s).&lt;/li&gt;
+  &lt;li&gt;443 MHz is &lt;em&gt;not&lt;/em&gt; supported by the T4 model, incase you were one of the three people in the world who actually used this feature.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Like all of Sonoff’s products, the T4 is really easy to flash with your favourite custom firmware. I decided to go with ESPHome, because of the easy integration with &lt;a href=&quot;https://hass.io/&quot;&gt;Home Assistant&lt;/a&gt; and super easy yaml configuration, but tasmota and espurna will also work.&lt;/p&gt;
+
+&lt;h1 id=&quot;how-should-i-flash&quot;&gt;How should I flash?&lt;/h1&gt;
+
+&lt;p&gt;For the first flash, you &lt;strong&gt;will most likely&lt;/strong&gt; need to connect via UART. See below as to why SonOTA currently doesn’t work.&lt;/p&gt;
+
+&lt;h2 id=&quot;sonota&quot;&gt;SonOTA&lt;/h2&gt;
+
+&lt;p&gt;Sadly, the devices appear to all ship with firmware version 3, and are therefore not compatible with SonOTA. Even if SonOTA does end up adding support for v3, I would not recommend using this method. The device is &lt;em&gt;designed&lt;/em&gt; to be easily taken apart, and it’s super easy to connect up to it via serial.&lt;/p&gt;
+
+&lt;h2 id=&quot;serial&quot;&gt;Serial&lt;/h2&gt;
+
+&lt;h3 id=&quot;raspberry-pi&quot;&gt;Raspberry Pi&lt;/h3&gt;
+
+&lt;p&gt;If you happen to have a Raspberry Pi (or similar SBC with &lt;strong&gt;3v3&lt;/strong&gt; UART interface), you could use it without the need for an adaptor. This is the method I ended up choosing, as I did not happen to have a TTL-USB adaptor laying around, although I cannot recommend it for beginners. For further information, I recommend following these two guides:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;a href=&quot;https://tasmota.github.io/docs/Flash-Sonoff-using-Raspberry-Pi/&quot;&gt;Tasmota - Flash Sonoff using Raspberry Pi&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href=&quot;https://www.sigmdel.ca/michel/ha/sonoff/flashing_sonoff_en.html&quot;&gt;sigmdel.ca - Flashing a Sonoff with RPI&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;PORT: Will most likely be /dev/ttyS0 on a RPI 3/4 or /dev/ttyAMA0 on a Pi 1/2/zero&lt;/p&gt;
+
+&lt;h3 id=&quot;ttl-usb-adaptor&quot;&gt;TTL-USB Adaptor&lt;/h3&gt;
+
+&lt;p&gt;The &lt;a href=&quot;https://cdn.sparkfun.com/datasheets/Dev/Arduino/Other/CH340DS1.PDF&quot;&gt;CH340G&lt;/a&gt; appears to be the most common USB-SERIAL adaptor, although others (like FTDI FT232 or CP2102 will also work). They are extremely cheap, especially from eBay or AliExpress, and are &lt;em&gt;extremely&lt;/em&gt; useful. It’s never too late to pick one (or 5) up. Be aware though, any ESP866-based device &lt;strong&gt;might get fried by 5v&lt;/strong&gt;. Always remember to set your adaptor to 3v3.&lt;/p&gt;
+
+&lt;p&gt;PORT: Depends on your OS. On Linux, it is likely &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/ttyUSB0&lt;/code&gt;. On Windows, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;COM1&lt;/code&gt; and on MacOS, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/dev/tty.usbserial&lt;/code&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;an-alternative-if-you-dont-have-either-of-the-above---nodemcu-or-other-development-board&quot;&gt;An alternative if you don’t have either of the above - NodeMCU or other development board!&lt;/h3&gt;
+
+&lt;p&gt;Many ESP8266 / ESP32 development boards come with an onboard USB port, TTL-USB adaptor and 3v3 regulator. In this example, I use a NodeMCU, but you do not need to do the same. Just make sure your device is 3v3 not 5v (eg. many Arduino’s), as this &lt;strong&gt;may fry your Sonoff T4&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;NodeMCU&lt;/th&gt;
+      &lt;th&gt;Sonoff&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;3v3&lt;/td&gt;
+      &lt;td&gt;3v3&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;GND&lt;/td&gt;
+      &lt;td&gt;GND&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;TX&lt;/td&gt;
+      &lt;td&gt;TX&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;RX&lt;/td&gt;
+      &lt;td&gt;RX&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;&lt;strong&gt;Note:&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;The TX and RX pins are “backwards”. This is correct.&lt;/li&gt;
+  &lt;li&gt;GND must also be connected to the NodeMCU’s ENable pin. This disables the NodeMCU.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;You can then plugin in your PC / Laptop to the development board via USB.&lt;/p&gt;
+
+&lt;h3 id=&quot;compiling-your-binary&quot;&gt;Compiling your binary&lt;/h3&gt;
+
+&lt;p&gt;This step will depend on which firmware you decide to use. ESPHome has a convenient setup wizard (&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;esphome your_node_name.yaml wizard&lt;/code&gt;), and you can then compile the binary with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;esphome your_node_name.yaml compile&lt;/code&gt;. The binary will be located in &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;./your_node_name/.pioenvs/your_node_name/firmware.bin&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;Whichever firmware you choose, &lt;strong&gt;make sure you enable OTA updates, so you can upload new firmware later on without needing to take the switch apart&lt;/strong&gt;.&lt;/p&gt;
+
+&lt;h3 id=&quot;setting-the-device-into-flashing-mode&quot;&gt;Setting the device into flashing mode&lt;/h3&gt;
+
+&lt;p&gt;The GPIO pin 0 needs to be connected to ground for the Sonoff T4 to be put into flashing mode. This is best achieved by connecting R10 (on the back of the PCB) to GND for ~10 seconds while the device is turned on (you connect the 3v3 from your serial adaptor).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/2020-12-13-sonoff-t4eu1c/r10.jpg&quot; alt=&quot;r10&quot; /&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;gui-flashing-tools-for-beginners&quot;&gt;GUI flashing tools (for beginners)&lt;/h3&gt;
+
+&lt;p&gt;Among your options are &lt;a href=&quot;https://github.com/tasmota/tasmotizer&quot;&gt;Tasmotizer&lt;/a&gt; and &lt;a href=&quot;https://github.com/esphome/esphome-flasher/&quot;&gt;ESPHome-flasher&lt;/a&gt;. Both are extremely intuitive so I won’t bother explaining how to use them.&lt;/p&gt;
+
+&lt;h3 id=&quot;flashing-with-esptoolpy-slightly-more-advanced&quot;&gt;Flashing with esptool.py (&lt;em&gt;slightly more&lt;/em&gt; advanced)&lt;/h3&gt;
+
+&lt;p&gt;ESPTool requires either Python2.7, Python3.4 or newer. The latest stable release is easily installed with:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;pip2 &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;esptool &lt;span class=&quot;c&quot;&gt;# For Python2&lt;/span&gt;
+&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;pip3 &lt;span class=&quot;nb&quot;&gt;install &lt;/span&gt;esptool &lt;span class=&quot;c&quot;&gt;# For Python3&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Getting errors with pip3? Try &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python -m pip install esptool&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;On Windows or want an executable? Try &lt;a href=&quot;https://github.com/igrr/esptool-ck/releases&quot;&gt;this&lt;/a&gt; instead of installing with pip.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;optional-make-a-backup-of-the-flash&quot;&gt;(Optional) make a backup of the flash&lt;/h4&gt;
+
+&lt;p&gt;You can do this with &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;esptool.py -p PORT read_flash 0 0x100000 flash_contents.bin&lt;/code&gt;, where PORT depends on whether you are on Windows, using a USB adaptor, or Raspberry Pi. A new file will be created in your current working directory, called &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;flash_contents.bin&lt;/code&gt;.&lt;/p&gt;
+
+&lt;p&gt;The Sonoff T4 works with the default baud rate of 115200. You do not need to bother changing this.&lt;/p&gt;
+
+&lt;h4 id=&quot;writing-your-new-binary&quot;&gt;Writing your new binary&lt;/h4&gt;
+
+&lt;p&gt;Now, you must power-cycle the device. Disconnect the 3v3 from your RPI / serial adaptor, short R10 to ground (using a jumper wire again), reconnect 3v3, wait 10 seconds, stop shorting R10 to ground.&lt;/p&gt;
+
+&lt;p&gt;After power cycling the device, you can upload the new firmware with the following command:&lt;/p&gt;
+
+&lt;div class=&quot;language-sh highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;esptool.py &lt;span class=&quot;nt&quot;&gt;-p&lt;/span&gt; PORT write_flash 0x0 your_new_firmware.bin
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;Disconnect 3v3 one final time, then reconnect it (without the jumper wire between R10 and GND). Your T4 should connect to whatever WiFi network you specified when compiling the binary, and it should be fully functional (minus not having the relay connected). Once you have verified the device works, you can disconnect your serial adaptor / RPI and install the T4 in the desired location (following the instructions from the original manual).&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;/assets/images/2020-12-13-sonoff-t4eu1c/wiring-diagram.jpg&quot; alt=&quot;wiring-diagram&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;making-and-uploading-overtheair-the-final-firmware&quot;&gt;Making and uploading (OverTheAir) the final firmware&lt;/h1&gt;
+
+&lt;p&gt;Below you can find all three controllable components and which GPIO pin they are connected to. This will be helpful for you to configure your custom firmware.&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;GPIO #&lt;/th&gt;
+      &lt;th&gt;Component&lt;/th&gt;
+      &lt;th&gt;Notes&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;GPIO0&lt;/td&gt;
+      &lt;td&gt;Touch Button 1&lt;/td&gt;
+      &lt;td&gt;Inverted&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;GPIO12&lt;/td&gt;
+      &lt;td&gt;Relay 1&lt;/td&gt;
+      &lt;td&gt;Inverted&lt;/td&gt;
+    &lt;/tr&gt;
+    &lt;tr&gt;
+      &lt;td&gt;GPIO13&lt;/td&gt;
+      &lt;td&gt;Led 1&lt;/td&gt;
+      &lt;td&gt;Inverted&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;There currently only exists one variant of the T4, called T4EU1C. It only has one touch button and relay. If a 2 channel variant is released, the second relay will likely be on GPIO pin 5 and the second button on pin 9.&lt;/p&gt;
+
+&lt;h2 id=&quot;my-own-configuration-for-esphome&quot;&gt;My own configuration for ESPHome&lt;/h2&gt;
+
+&lt;div class=&quot;language-yaml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;na&quot;&gt;esphome&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;light_switch&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;platform&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;ESP8266&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;board&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;esp01_1m&lt;/span&gt;
+
+&lt;span class=&quot;na&quot;&gt;wifi&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;ssid&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;Thomas&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;Home&quot;&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;NOPE!!&quot;&lt;/span&gt;
+
+  &lt;span class=&quot;c1&quot;&gt;# Enable fallback hotspot (captive portal) in case wifi connection fails&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;ap&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;ssid&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;Light&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt; &lt;/span&gt;&lt;span class=&quot;s&quot;&gt;Switch&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;password&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;NOPE!!&quot;&lt;/span&gt;
+
+&lt;span class=&quot;na&quot;&gt;captive_portal&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Enable logging&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;logger&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;# Enable Home Assistant API&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;api&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+
+&lt;span class=&quot;na&quot;&gt;ota&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+
+&lt;span class=&quot;na&quot;&gt;binary_sensor&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;platform&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gpio&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;pin&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;number&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;GPIO0&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;mode&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;INPUT_PULLUP&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;inverted&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;button_1&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;on_press&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+      &lt;span class=&quot;na&quot;&gt;then&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+        &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;light.toggle&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;light_1&lt;/span&gt;
+
+&lt;span class=&quot;na&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;platform&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gpio&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;pin&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;GPIO12&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;relay_1&lt;/span&gt;
+
+&lt;span class=&quot;na&quot;&gt;light&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;pi&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;platform&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;binary&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;Light&quot;&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;light_1&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;output&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;relay_1&lt;/span&gt;
+
+&lt;span class=&quot;na&quot;&gt;status_led&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+  &lt;span class=&quot;na&quot;&gt;pin&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;number&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;GPIO13&lt;/span&gt;
+    &lt;span class=&quot;na&quot;&gt;inverted&lt;/span&gt;&lt;span class=&quot;pi&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;no&quot;&gt;true&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;</content><author><name>Thomas Aldrian</name></author><category term="smart-home" /><category term="Sonoff" /><category term="t4" /><category term="t4eu1c" /><category term="ESPHome" /><category term="home-assistant" /><category term="hass.io" /><summary type="html">What’s this? A no-neutral WiFi-controlled smart switch made by Sonoff?</summary></entry><entry><title type="html">Welcome to Jekyll!</title><link href="https://weissnix4711.github.io/jekyll/update/2020/10/05/welcome-to-jekyll/" rel="alternate" type="text/html" title="Welcome to Jekyll!" /><published>2020-10-05T16:58:27+00:00</published><updated>2020-10-05T16:58:27+00:00</updated><id>https://weissnix4711.github.io/jekyll/update/2020/10/05/welcome-to-jekyll</id><content type="html" xml:base="https://weissnix4711.github.io/jekyll/update/2020/10/05/welcome-to-jekyll/">&lt;p&gt;You’ll find this post in your &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;_posts&lt;/code&gt; directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;jekyll serve&lt;/code&gt;, which launches a web server and auto-regenerates your site when a file is updated.&lt;/p&gt;
+
+&lt;p&gt;Jekyll requires blog post files to be named according to the following format:&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;YEAR-MONTH-DAY-title.MARKUP&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;Where &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;YEAR&lt;/code&gt; is a four-digit number, &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MONTH&lt;/code&gt; and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;DAY&lt;/code&gt; are both two-digit numbers, and &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;MARKUP&lt;/code&gt; is the file extension representing the format used in the file. After that, include the necessary front matter. Take a look at the source for this post to get an idea about how it works.&lt;/p&gt;
+
+&lt;p&gt;Jekyll also offers powerful support for code snippets:&lt;/p&gt;
+
+&lt;figure class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-ruby&quot; data-lang=&quot;ruby&quot;&gt;&lt;span class=&quot;k&quot;&gt;def&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+  &lt;span class=&quot;nb&quot;&gt;puts&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;Hi, &lt;/span&gt;&lt;span class=&quot;si&quot;&gt;#{&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;si&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;&lt;/span&gt;
+&lt;span class=&quot;k&quot;&gt;end&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;print_hi&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;'Tom'&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;#=&amp;gt; prints 'Hi, Tom' to STDOUT.&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/figure&gt;
+
+&lt;p&gt;Check out the &lt;a href=&quot;https://jekyllrb.com/docs/home&quot;&gt;Jekyll docs&lt;/a&gt; for more info on how to get the most out of Jekyll. File all bugs/feature requests at &lt;a href=&quot;https://github.com/jekyll/jekyll&quot;&gt;Jekyll’s GitHub repo&lt;/a&gt;. If you have questions, you can ask them on &lt;a href=&quot;https://talk.jekyllrb.com/&quot;&gt;Jekyll Talk&lt;/a&gt;.&lt;/p&gt;</content><author><name>Thomas Aldrian</name></author><category term="jekyll" /><category term="update" /><summary type="html">You’ll find this post in your _posts directory. Go ahead and edit it and re-build the site to see your changes. You can rebuild the site in many different ways, but the most common way is to run jekyll serve, which launches a web server and auto-regenerates your site when a file is updated.</summary></entry></feed>
