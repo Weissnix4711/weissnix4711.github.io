@@ -1,0 +1,611 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="4.2.2">Jekyll</generator><link href="https://weissnix4711.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://weissnix4711.github.io/" rel="alternate" type="text/html" /><updated>2025-01-06T17:02:47+00:00</updated><id>https://weissnix4711.github.io/feed.xml</id><title type="html">Thomas Aldrian</title><subtitle>Welcome to my blog!</subtitle><author><name>Thomas Aldrian</name></author><entry><title type="html">Dell PERC H310 raid card flashed to IT Mode</title><link href="https://weissnix4711.github.io/homelab/2024/05/14/dell-h310-it-mode/" rel="alternate" type="text/html" title="Dell PERC H310 raid card flashed to IT Mode" /><published>2024-05-14T00:00:00+00:00</published><updated>2024-05-14T00:00:00+00:00</updated><id>https://weissnix4711.github.io/homelab/2024/05/14/dell-h310-it-mode</id><content type="html" xml:base="https://weissnix4711.github.io/homelab/2024/05/14/dell-h310-it-mode/"><![CDATA[<p>SAS HBA (Host Bus Adapter) cards can be expensive, RAID cards are much cheaper. How does that make sense? They’re electronically identical? Well I can’t answer that, but I can tell you how to reflash your PERC H310 (and similar) cards to the firmware of the LSI 9211-8i card, an actual HBA.</p>
+
+<h1 id="preparation">Preparation</h1>
+<h2 id="files">Files</h2>
+<p>You’re going to need the following files:</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">sbrempty.bin</code>
+    <ul>
+      <li>simply a 256bit file filled with 00 and FF bytes. Can be created with the following command on linux:
+        <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>(dd if=/dev/zero bs=1 count=152; dd if=/dev/zero bs=1 count=104 | tr '\000' '\377' ) &gt; sbrempty2.bin
+</code></pre></div>        </div>
+      </li>
+    </ul>
+  </li>
+  <li><code class="language-plaintext highlighter-rouge">megacli.exe</code> (Optional, recommended)
+    <ul>
+      <li>Required only to get the card’s SAS address. This information may also be physically printed on the card somewhere, so it’s not strictly necessary.</li>
+    </ul>
+  </li>
+  <li><code class="language-plaintext highlighter-rouge">megarec.exe</code> (Optional, recommended)
+    <ul>
+      <li>Can be used to erase the flash on a DOS system. <code class="language-plaintext highlighter-rouge">sas2flash</code> can also do the same, though it appears to be less reliable.</li>
+    </ul>
+  </li>
+  <li><code class="language-plaintext highlighter-rouge">sas2flsh.exe</code>/<code class="language-plaintext highlighter-rouge">sas2flash.efi</code>
+    <ul>
+      <li>Use to flash new firmware to the card.</li>
+      <li>Also used to add your SAS address (or technically any address you want) back into the firmware after flashing.</li>
+    </ul>
+  </li>
+</ul>
+
+<p>I’m not going to link any of these files here, because Broadcom, being, well, Broadcom, has removed the download links from their site. Check some of the other guides at the end of this page, they have copies of all the files needed.</p>
+
+<p>The <code class="language-plaintext highlighter-rouge">sas2flash</code> utility (both efi and dos binaries) exists in two versions:</p>
+<ul>
+  <li>‘P05’ - 5.00.00.00 2010.02.10</li>
+  <li>‘P19’ - 19.00.00.00 2014.03.17</li>
+</ul>
+
+<p>For reflashing this card (and many other Dell cards), you want P05, not P19. I will explain why later.</p>
+
+<p>In addition to this, you will probably require a FreeDOS USB stick. The easiest way to make one is via <a href="https://rufus.ie/en/">Rufus</a> on Windows. On Linux, you can follow <a href="https://superuser.com/a/1750028">this guide</a>.</p>
+
+<p>Additionally, you may want an EFI shell if your motherboard does not have a “boot to EFI shell” option in the BIOS options. Simply grab any EFI shell e.g., the EDK2 shell from the section below, and place it in <code class="language-plaintext highlighter-rouge">[USB ROOT]/EFI/BOOT/shellx64.efi</code> and a copy in <code class="language-plaintext highlighter-rouge">[USB ROOT]/EFI/BOOT/bootx64.efi</code>.</p>
+
+<h2 id="to-uefi-or-not-to-uefi---error-failed-to-initialize-pal">To UEFI or not to UEFI - <code class="language-plaintext highlighter-rouge">ERROR: Failed to initialize PAL</code></h2>
+<p>There exist two sets of binaries for the <code class="language-plaintext highlighter-rouge">sas2flash</code> utility: one for UEFI systems and one for DOS. I would suggest trying both. Usually, the UEFI executables will not work properly on modern systems.</p>
+
+<p>If you find an error like <code class="language-plaintext highlighter-rouge">Failed to initialize PAL</code> when running <code class="language-plaintext highlighter-rouge">sas2flash.efi</code>, this is an issue with the UEFI shell you are running. PAL errors refer to the platform abstraction layer, a piece of code which allows <code class="language-plaintext highlighter-rouge">sas2flash</code> to be easily ported to different systems. What this effectively means is the UEFI is blocking calls to access the firmware of the raid card. In this case, you can either try a different UEFI shell (especially if you were using a shell booted directly from the motherboard’s setup menu), or try FreeDOS.</p>
+
+<p>That being said, this same error can also crop up on DOS, where it is usually caused by a lack of the <a href="https://wiki.osdev.org/BIOS32">BIOS32 service directory</a> feature. <sup id="fnref:broadcom_lsi_docs" role="doc-noteref"><a href="#fn:broadcom_lsi_docs" class="footnote" rel="footnote">1</a></sup>. Again, try the EFI method, particularly a separate shell, like <a href="https://github.com/tianocore/edk2/raw/UDK2014/EdkShellBinPkg/FullShell/X64/Shell_Full.efi">the one from EDK2</a>.</p>
+
+<p>It may also be possible that some setting like secure boot is still enabled, which would also prevent some APIs being inaccessible, however this would usually make it impossible to boot a UEFI shell or FreeDOS in the first place.</p>
+
+<h2 id="sas-address">SAS address</h2>
+<p>You will need to make note of the SAS address of the card. If you are running a headless server it may be easiest to read it from the card’s firmware directly, otherwise (or if you forgot before clearing the flash) you can still get the SAS address from the sticker on the back of the card.</p>
+
+<p>The following command will print a lot of information, look for a line stating “SAS Address”:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>megacli.exe -AdpAllInfo -aAll -page 20
+</code></pre></div></div>
+
+<p>The address should be in the format <code class="language-plaintext highlighter-rouge">500xxxxxxxxxxxxx</code>.</p>
+
+<h1 id="wipe-firmware">Wipe firmware</h1>
+<p>I would recommend trying to do this via the megarec executable, in FreeDOS, using the following commands:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>megarec.exe -writesbr 0 sbrempty.bin
+megarec.exe -cleanflash 0
+</code></pre></div></div>
+
+<p>Reboot after this step.</p>
+
+<p>Do not worry if the first command seemingly fails, move on to the second command anyway.</p>
+
+<p>It is also possible to use the <code class="language-plaintext highlighter-rouge">sas2flash</code> binary within the EFI shell, using one of these two commands:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sas2flash.efi -c 0 -o -e 6
+sas2flash.efi -c 0 -o -e 7
+</code></pre></div></div>
+
+<p>The first clears everything, excluding some manufacturer data. This should suffice, however if the flashing procedure does not work, it is possible to clear the entire flash with <code class="language-plaintext highlighter-rouge">-e 7</code>. This can and has led to bricks, <strong>so proceed with caution!</strong> Though it rarely ever does.. <sup id="fnref:sas2flash_reference" role="doc-noteref"><a href="#fn:sas2flash_reference" class="footnote" rel="footnote">2</a></sup></p>
+
+<p>The general consensus seems to be that the <code class="language-plaintext highlighter-rouge">sas2flash</code> erase command is too unreliable, so <strong>it is recommended to always use <code class="language-plaintext highlighter-rouge">megarec</code> where possible</strong>, even if you switch back to the EFI shell to flash the new firmware.</p>
+
+<h2 id="motherboard-wont-boot">Motherboard won’t boot</h2>
+<p>As I said, it is extremely rare for a brick to occur, but if you do somehow manage to find yourself with a motherboard that won’t boot, don’t worry.</p>
+
+<ul>
+  <li>Remove the card from the system</li>
+  <li>Reboot into BIOS</li>
+  <li>Disable <em>optionROM support</em>, usually hidden somewhere in boot or CSM/compatibility settings</li>
+  <li>Plug the card back in and erase the card’s flash again via megarec</li>
+  <li>Proceed with flashing</li>
+</ul>
+
+<p>Just remember to re-enable optionROM support later if you want it.</p>
+
+<h1 id="flash-new-firmware">Flash new firmware</h1>
+<p>This is where it gets tricky. You will not be able to flash the LSI9211 firmware (<code class="language-plaintext highlighter-rouge">2118it.bin</code> or <code class="language-plaintext highlighter-rouge">2118ir.bin</code>) directly. You need to flash another binary, namely that of the Dell 6Gbps HBA card first.</p>
+
+<h2 id="dell-6gbps-sas-hba">Dell 6Gbps SAS HBA</h2>
+<p>First of all, run the following command (substituting <code class="language-plaintext highlighter-rouge">sas2flsh</code> for the correct binary name and extension for UEFI or DOS):</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sas2flsh -o -f 6GBPSAS.fw
+</code></pre></div></div>
+
+<p>Reboot before attempting to flash the LSI 9211 firmware.</p>
+
+<h2 id="lsi9211">LSI9211</h2>
+<p>Now we can flash the actual firmware we want.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sas2flsh -o -f 2118it.bin -b mptsas2.rom
+</code></pre></div></div>
+
+<h3 id="optionrom">OptionROM</h3>
+<p>The <code class="language-plaintext highlighter-rouge">-b mptsas2.rom</code> part is not necessary if you don’t want optionROM support (the splash screen you see when booting a system with a SAS card, and the settings page which can be accessed from said splash screen). That is unless you want to flash the “IR Mode” (usually <code class="language-plaintext highlighter-rouge">2118ir.bin</code>) firmware, in which case you will need optionROM support to access any of the hardware RAID settings.</p>
+
+<h3 id="error-cannot-flash-it-firmware-over-ir-firmware">ERROR: Cannot Flash IT Firmware over IR Firmware</h3>
+<p>This is where it is important that you have the P05 version of <code class="language-plaintext highlighter-rouge">sas2flash</code>. The reason is the newer version will not allow you to flash IT mode firmware over IR mode. The older version will, albeit with asking for confirmation.</p>
+
+<p>If you get the error <code class="language-plaintext highlighter-rouge">Cannot Flash IT Firmware over IR Firmware</code>, it is because you are not using <code class="language-plaintext highlighter-rouge">sas2flash</code> P05.</p>
+
+<h2 id="rewrite-sas-address">Rewrite SAS address</h2>
+<p>Hopefully you should have written down the SAS address earlier. If you haven’t, and it’s not physically printed on the card, you can always make something up. Any string of 16 numbers and letters should work, and it will only become an issue if you plug in another card with the exact same SAS address (very unlikely). In fact, it’s about a chance of 1 in 8×10²⁴.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>sas2flsh -o -sasadd 500xxxxxxxxxxxxx
+</code></pre></div></div>
+
+<p>Substitute the x’s for the actual address of course.</p>
+
+<p>And that’s it.. reboot and enjoy your new, much more useful, and dirt cheap HBA card.</p>
+
+<h1 id="links-and-resources">Links and resources</h1>
+<ul>
+  <li><a href="https://www.truenas.com/community/threads/flashing-dell-perc-h310-h200-ibm-m1015-to-lsi-9211-8i-under-uefi-solution-to-%E2%80%9Eerror-cannot-flash-it-firmware-over-ir-firmware%E2%80%9C.80463/">truenas.com: „ERROR: Cannot Flash IT Firmware over IR Firmware“</a></li>
+  <li><a href="https://community.spiceworks.com/t/my-journey-into-crossflashing-a-dell-perc-h310-ir-mode-to-lsi-9211-8i-it-mode-for-zfs-truenas-use/1014007">spiceworks.com: “My Journey into crossflashing a Dell PERC H310”</a></li>
+  <li><a href="https://www.vladan.fr/flash-dell-perc-h310-with-it-firmware/">vladan.fr: Flash Dell PERC H310</a></li>
+  <li><a href="https://forums.servethehome.com/index.php?threads/lsi-raid-controller-and-hba-complete-listing-plus-oem-models.599/">List of raid controllers/HBAs and potential crossflash targets</a></li>
+  <li><a href="https://sven-stromann.de/flash-dell-perc-h200-and-h310-to-it-mode/">sven-stromann.de: Flash Dell PERC H200 and H310</a></li>
+  <li><a href="https://tinkertry.com/how-to-flash-the-firmware-of-your-lsi-raid-controller-using-megacli-on-a-dos-boot-usb-drive">tinkertry.com: Flash LSI Raid controller using MegaCLI</a></li>
+  <li><a href="https://www.truenas.com/community/threads/walkthrough-crossflash-dell-perc-h310.77304/">Walkthrough: Crossflash Dell PERC H310</a></li>
+  <li><a href="https://github.com/tianocore/edk2/raw/UDK2014/EdkShellBinPkg/FullShell/X64/Shell_Full.efi">EDK2 Shell</a></li>
+  <li><a href="https://rufus.ie/en/">Rufus</a></li>
+  <li><a href="https://superuser.com/a/1750028">FreeDOS Guide Linux</a></li>
+</ul>
+
+<div class="footnotes" role="doc-endnotes">
+  <ol>
+    <li id="fn:broadcom_lsi_docs" role="doc-endnote">
+      <p><a href="https://www.broadcom.com/support/knowledgebase/1211161501344/flashing-firmware-and-bios-on-lsi-sas-hbas">https://www.broadcom.com/support/knowledgebase/1211161501344/flashing-firmware-and-bios-on-lsi-sas-hbas</a> <a href="#fnref:broadcom_lsi_docs" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:sas2flash_reference" role="doc-endnote">
+      <p><a href="https://web.archive.org/web/20200924081036/https://docs.broadcom.com/doc/12355769">https://web.archive.org/web/20200924081036/https://docs.broadcom.com/doc/12355769</a> <a href="#fnref:sas2flash_reference" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+  </ol>
+</div>]]></content><author><name>Thomas Aldrian</name></author><category term="homelab" /><category term="Homelab" /><category term="RAID" /><category term="NAS" /><summary type="html"><![CDATA[Guide to flashing the Dell PERC H310 card to IT Mode]]></summary></entry><entry><title type="html">PinePhone (Pro) Battery Charger Teardown</title><link href="https://weissnix4711.github.io/teardown/2023/12/27/pinephone-battery-charger/" rel="alternate" type="text/html" title="PinePhone (Pro) Battery Charger Teardown" /><published>2023-12-27T00:00:00+00:00</published><updated>2023-12-27T00:00:00+00:00</updated><id>https://weissnix4711.github.io/teardown/2023/12/27/pinephone-battery-charger</id><content type="html" xml:base="https://weissnix4711.github.io/teardown/2023/12/27/pinephone-battery-charger/"><![CDATA[<h1 id="pinephone-battery-charger">PinePhone Battery Charger</h1>
+
+<p>I recently picked up this little battery charger made specifically for the Samsung J7 battery used by the PinePhone (Pro). It features:</p>
+
+<ul>
+  <li>A single USB-C port</li>
+  <li>Red/green status LEDs</li>
+</ul>
+
+<p>Yeah that’s about it. Very simple, but that’s good.</p>
+
+<p>Seems to work just fine, but for shits and giggles I decided to break it open. I figured maybe this could be useful to someone making their own charger.</p>
+
+<h2 id="outside">Outside</h2>
+
+<p>For lack of better photos, here’s the original product picture from Pine64:</p>
+
+<p><img src="/assets/images/2023-12-27-pinephone-battery-charger/product1.png" alt="Product picture" /></p>
+
+<h2 id="pcb">PCB</h2>
+
+<p>This is the very simple PCB inside. It’s based around the MICRONE ME4057DSPG-N IC.</p>
+
+<p><img src="/assets/images/2023-12-27-pinephone-battery-charger/pcb.jpg" alt="PCB" /></p>
+
+<p><a href="https://weissnix4711.github.io/assets/downloads/2023-12-27-pinephone-battery-charger/Microne-ME4057DSPG-N.pdf">Here</a> is a (somewhat poorly) translated copy of the datasheet.</p>
+
+<p>The charging logic for this IC is as follows:</p>
+
+<ul>
+  <li>Under 2.9V, trickle charge at <sup>1</sup>/<sub>10</sub> I<sub>BAT</sub></li>
+  <li>CC to 4.35V</li>
+  <li>CV at 4.35 until current falls to <sup>1</sup>/<sub>10</sub> I<sub>BAT</sub></li>
+  <li>Off, showing (Green) STBY LED</li>
+  <li>If voltage drops to 4.16V, charging is resumed from the CC stage</li>
+</ul>
+
+<h3 id="schematic">Schematic</h3>
+
+<p><img src="/assets/images/2023-12-27-pinephone-battery-charger/schematic.png" alt="Schematic" /></p>
+
+<p>From the datasheet, I<sub>BAT</sub> = 1100/R<sub>PROG</sub>, meaning the battery charging current is approx. 790mA or 0.26C of the original 3000mAh battery that comes with the PinePhone (Pro), and trickle &amp; cutoff current is about 79mA.</p>]]></content><author><name>Thomas Aldrian</name></author><category term="teardown" /><category term="PinePhone" /><category term="PPPro" /><category term="Linux Mobile" /><category term="Teardown" /><summary type="html"><![CDATA[Teardown of the Pine64 Pinephone standalone battery charger]]></summary></entry><entry><title type="html">DNSCrypt + Dnsmasq setup with Waydroid</title><link href="https://weissnix4711.github.io/linux-mobile/2023/03/06/dnscrypt/" rel="alternate" type="text/html" title="DNSCrypt + Dnsmasq setup with Waydroid" /><published>2023-03-06T00:00:00+00:00</published><updated>2023-03-06T00:00:00+00:00</updated><id>https://weissnix4711.github.io/linux-mobile/2023/03/06/dnscrypt</id><content type="html" xml:base="https://weissnix4711.github.io/linux-mobile/2023/03/06/dnscrypt/"><![CDATA[<h1 id="preamble">Preamble</h1>
+
+<p>I’ll skip the usual shite about why you really should be using one of
+DNSCrypt, DoT or DoH nowadays. Okay, maybe not that last one if it can be avoided.</p>
+
+<p>So, here’s my very quick guide / reference to getting DNSCrypt and dnsmasq working.
+This has been tested with waydroid, which is especially relevant because waydroid runs its own dnsmasq instance, which can sometimes fail to start when another instance is already running.</p>
+
+<h1 id="the-guide">The guide</h1>
+
+<h2 id="etcdnscrypt-proxydnscrypt-proxytoml">/etc/dnscrypt-proxy/dnscrypt-proxy.toml</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server_names = ['cloudflare']
+listen_addresses = ['127.0.0.53:53000']
+</code></pre></div></div>
+
+<p>Edit server_names as you wish, or leave it commented and adjust the <code class="language-plaintext highlighter-rouge">require_*</code> configuration values as desired.
+If you use the same loopback address as dnsmasq will use, make sure to change the port to something non-standard.</p>
+
+<h2 id="etcdnsmasqconf">/etc/dnsmasq.conf</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>no-resolv
+server=127.0.0.53#53000
+listen-address=127.0.0.53
+bind-interfaces
+</code></pre></div></div>
+
+<p>Getting <code class="language-plaintext highlighter-rouge">dnsmasq: failed to create listening socket for 192.168.250.1: Address already in use</code> errors in waydroid log?
+You probably forgot to enable <code class="language-plaintext highlighter-rouge">bind-interfaces</code>. It prevents dnsmasq from binding to the loopback interface, which would interfere with waydroid.</p>
+
+<p>To optionally (though it’s strongly recommended) enable DNSSEC, uncomment the following two lines:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>conf-file=/usr/share/dnsmasq/trust-anchors.conf
+dnssec
+</code></pre></div></div>
+
+<p>Remember to <code class="language-plaintext highlighter-rouge">apk add dnsmasq-dnssec</code> (or your system’s equivalent)!</p>
+
+<h2 id="etcresolvconf">/etc/resolv.conf</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>nameserver 127.0.0.53
+options edns0
+</code></pre></div></div>
+
+<p>Many things will break if you try and specify a non standard (53) port in resolv.conf. So don’t.
+Dnsmasq should be configured to use port 53 by default.
+However, you can use a different localhost address as I’ve done here. Just remember to update dnsmasq.conf</p>
+
+<h2 id="etcnetworkmanagerconfd00-dnsconf">/etc/NetworkManager/conf.d/00-dns.conf</h2>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[main]
+dns=none
+</code></pre></div></div>
+
+<p>This prevents NetworkManager from overwriting <code class="language-plaintext highlighter-rouge">resolv.conf</code> with the DNS server provided by DHCP, as it would usually. This will not automatically edit existing networks, so you may have to delete and re-add connections, or just update the DNS field to blank and checking <code class="language-plaintext highlighter-rouge">Automatic</code> DNS.</p>]]></content><author><name>Thomas Aldrian</name></author><category term="linux-mobile" /><category term="PinePhone" /><category term="PPPro" /><category term="Linux Mobile" /><category term="DNS" /><summary type="html"><![CDATA[A short and simple guide to setting up DNSCrypt and dnsmasq.]]></summary></entry><entry><title type="html">My Home Assistant CCTV camera setup</title><link href="https://weissnix4711.github.io/smart-home/2022/08/30/hass-cctv/" rel="alternate" type="text/html" title="My Home Assistant CCTV camera setup" /><published>2022-08-30T00:00:00+00:00</published><updated>2022-08-30T00:00:00+00:00</updated><id>https://weissnix4711.github.io/smart-home/2022/08/30/hass-cctv</id><content type="html" xml:base="https://weissnix4711.github.io/smart-home/2022/08/30/hass-cctv/"><![CDATA[<h1 id="esphome-setup">ESPHome setup</h1>
+
+<p>First, we have to configure and install ESPHome on the camera.</p>
+
+<p>Most ESP32-CAM modules do not have a USB-UART bridge onboard, so you will need an external adaptor. Those based on the CH340G chip are cheap and readily available from eBay, Aliexpress, etc, and perfectly suitable for flashing ESP8266/32 and various Arduino devices. Make sure that the adapter you use is set to 3V3, as 5V can kill the ESP.</p>
+
+<p>I will not cover how to flash ESPHome firmware here, but the <a href="https://esphome.io/">ESPHome wiki</a> does quite a good job. If you still have questions, try asking in the <a href="https://community.home-assistant.io/c/esphome/36">ESPHome forums</a> or on <a href="https://discord.gg/KhAMKrd">Discord</a>.</p>
+
+<h2 id="configure-firmware">Configure firmware</h2>
+
+<p>I have the Ai-Thinker ESP32-CAM module. You may have to edit the configuration below to fit your camera module. Also, be warned that some modules can get very hot, in particular the M5Stack.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">esphome</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">living-room-camera</span>
+  <span class="na">platform</span><span class="pi">:</span> <span class="s">ESP32</span>
+  <span class="c1"># board: esp32cam</span>
+  <span class="na">board</span><span class="pi">:</span> <span class="s">esp32dev</span>
+
+<span class="na">wifi</span><span class="pi">:</span>
+  <span class="na">ssid</span><span class="pi">:</span> <span class="s2">"</span><span class="s">WiFiNetwork"</span>
+  <span class="na">password</span><span class="pi">:</span> <span class="s2">"</span><span class="s">WiFIPassword"</span>
+
+  <span class="c1"># Enable fallback hotspot (captive portal) in case wifi connection fails</span>
+  <span class="na">ap</span><span class="pi">:</span>
+    <span class="na">ssid</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Living</span><span class="nv"> </span><span class="s">Room</span><span class="nv"> </span><span class="s">Camera"</span>
+    <span class="na">password</span><span class="pi">:</span> <span class="s2">"</span><span class="s">FallbackPassword"</span>
+
+  <span class="na">power_save_mode</span><span class="pi">:</span> <span class="s">NONE</span>
+
+<span class="na">captive_portal</span><span class="pi">:</span>
+
+<span class="c1"># Enable logging</span>
+<span class="na">logger</span><span class="pi">:</span>
+
+<span class="c1"># Enable Home Assistant API</span>
+<span class="na">api</span><span class="pi">:</span>
+
+<span class="c1"># Enable over-the-air updates</span>
+<span class="na">ota</span><span class="pi">:</span>
+
+<span class="c1"># Camera</span>
+<span class="na">esp32_camera</span><span class="pi">:</span>
+  <span class="na">external_clock</span><span class="pi">:</span>
+    <span class="na">pin</span><span class="pi">:</span> <span class="s">GPIO0</span>
+    <span class="na">frequency</span><span class="pi">:</span> <span class="s">20MHz</span>
+  <span class="na">i2c_pins</span><span class="pi">:</span>
+    <span class="na">sda</span><span class="pi">:</span> <span class="s">GPIO26</span>
+    <span class="na">scl</span><span class="pi">:</span> <span class="s">GPIO27</span>
+  <span class="na">data_pins</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">GPIO5</span><span class="pi">,</span> <span class="nv">GPIO18</span><span class="pi">,</span> <span class="nv">GPIO19</span><span class="pi">,</span> <span class="nv">GPIO21</span><span class="pi">,</span> <span class="nv">GPIO36</span><span class="pi">,</span> <span class="nv">GPIO39</span><span class="pi">,</span> <span class="nv">GPIO34</span><span class="pi">,</span> <span class="nv">GPIO35</span><span class="pi">]</span>
+  <span class="na">vsync_pin</span><span class="pi">:</span> <span class="s">GPIO25</span>
+  <span class="na">href_pin</span><span class="pi">:</span> <span class="s">GPIO23</span>
+  <span class="na">pixel_clock_pin</span><span class="pi">:</span> <span class="s">GPIO22</span>
+  <span class="na">power_down_pin</span><span class="pi">:</span> <span class="s">GPIO32</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Living</span><span class="nv"> </span><span class="s">Room</span><span class="nv"> </span><span class="s">Camera"</span>
+  <span class="na">id</span><span class="pi">:</span> <span class="s">camera</span>
+  <span class="na">max_framerate</span><span class="pi">:</span> <span class="s">10 fps</span>
+  <span class="na">idle_framerate</span><span class="pi">:</span> <span class="s">0.2 fps</span>
+  <span class="na">resolution</span><span class="pi">:</span> <span class="s">1600x1200</span>
+  <span class="na">jpeg_quality</span><span class="pi">:</span> <span class="m">10</span>
+  <span class="na">contrast</span><span class="pi">:</span> <span class="m">1</span>
+  <span class="na">brightness</span><span class="pi">:</span> <span class="m">0</span>
+  <span class="na">saturation</span><span class="pi">:</span> <span class="m">0</span>
+  <span class="na">vertical_flip</span><span class="pi">:</span> <span class="no">true</span>
+  <span class="na">horizontal_mirror</span><span class="pi">:</span> <span class="no">true</span>
+
+<span class="c1"># Flash light (optional)</span>
+<span class="na">output</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">platform</span><span class="pi">:</span> <span class="s">gpio</span>
+    <span class="na">pin</span><span class="pi">:</span> <span class="s">GPIO4</span>
+    <span class="na">id</span><span class="pi">:</span> <span class="s">flash</span>
+
+<span class="c1"># Light (optional)</span>
+<span class="na">light</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">platform</span><span class="pi">:</span> <span class="s">binary</span>
+    <span class="na">output</span><span class="pi">:</span> <span class="s">flash</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Living</span><span class="nv"> </span><span class="s">Room</span><span class="nv"> </span><span class="s">Camera</span><span class="nv"> </span><span class="s">Flash"</span>
+
+<span class="c1"># Restart switch (optional)</span>
+<span class="na">switch</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">platform</span><span class="pi">:</span> <span class="s">restart</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Living</span><span class="nv"> </span><span class="s">Room</span><span class="nv"> </span><span class="s">Camera</span><span class="nv"> </span><span class="s">Restart"</span>
+</code></pre></div></div>
+
+<p>For more information on setting up various camera modules, see the <a href="https://esphome.io/components/esp32_camera.html">ESPHome wiki</a>.</p>
+
+<h1 id="home-assistant-setup">Home Assistant setup</h1>
+
+<h2 id="create-token">Create token</h2>
+
+<p>Click on your profile in the lower left corner of the Home Assistant web UI. Scroll down on this page all the way to the section titled “Long-Lived Access Tokens”.</p>
+
+<p>Here, create a token. Name it anything you like, I recommend something like <code class="language-plaintext highlighter-rouge">motioneye</code> to easily differentiate it from any other long-lived tokens you may have.</p>
+
+<h2 id="nginx-addon">Nginx Addon</h2>
+
+<p>Install the Nginx Proxy core addon via the addon store in Home Assistant settings, if you haven’t already.</p>
+
+<h3 id="configuration">Configuration</h3>
+
+<p>On the addon page, in Configuration &gt; Options &gt; Customize, paste the following:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">active</span><span class="pi">:</span> <span class="no">true</span>
+<span class="na">default</span><span class="pi">:</span> <span class="s">nginx_proxy_default*.conf</span>
+<span class="na">servers</span><span class="pi">:</span> <span class="s">nginx_proxy/*.conf</span>
+</code></pre></div></div>
+
+<p>This allows you to add custom server configs in the <code class="language-plaintext highlighter-rouge">/share/nginx_proxy/</code> directory. You can do so via the terminal addon, or samba.</p>
+
+<p>On the same page, add a port for HTTP (non-SSL). This cannot be already in use by another addon, or by Home Assistant. I suggest 8080.</p>
+
+<h3 id="extra-config">Extra config</h3>
+
+<p>Add a file in <code class="language-plaintext highlighter-rouge">/share/nginx_proxy/motioneye.conf</code> and copy the config below. Remember the following:</p>
+
+<ul>
+  <li>Replace <code class="language-plaintext highlighter-rouge">Bearer xxxx</code> with your own token. It should be the same length as shown below.</li>
+  <li>Replace the port <code class="language-plaintext highlighter-rouge">8080</code> in <code class="language-plaintext highlighter-rouge">proxy_set_header Host $host:8080;</code> with whatever port you chose earlier for HTTP.</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server {
+    server_name localhost;
+    listen 80;
+
+    location /api/camera_proxy {
+        proxy_pass http://homeassistant:8123/api/camera_proxy;
+        proxy_set_header Host $host:8080;
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Authorization "Bearer rJeWKWcwvByeuuXTWdRyEtuKwfNWRJeRwtk6.QhF733CgyngaxlOPQH4aZdLURAG7ORUkTIUAlTmKT4x9pQMpevjiTR7fBwXnbzKS0pAzgNyvRS1LkOqEOBYD0AbcALu3VmTMfRIYRv.VhpZbpcNVbZKaT85-2dUSjXTTPBDzvcdjFYwVNeoIgB";
+    }
+}
+</code></pre></div></div>
+
+<p>Once this is done, restart the Nginx addon to make sure the new config is loaded.</p>
+
+<h2 id="motioneye">MotionEye</h2>
+
+<p>Install the motionEye addon via the addon store in Home Assistant settings, if you haven’t already.</p>
+
+<p>Open the web UI and login with the default username <code class="language-plaintext highlighter-rouge">admin</code> and no password. From here, add a new camera of type “Network Camera”. In the URL field, paste <code class="language-plaintext highlighter-rouge">http://localhost:8080/api/camera_proxy/camera.living_room_camera</code> and replace the port with whatever you chose earlier, and the entity name (in this case camera.living_room_camera) with the entity name of your own camera.</p>
+
+<p>You should now be able to see the camera stream from within motionEye, and configure motion detection, movies/stills and notifications as desired.</p>
+
+<p>I will create a further guide for motion events, automations and push notifications via the Home Assistant app, later. Previously I used a series of webhooks to accomplish this, though in theory the new <a href="https://www.home-assistant.io/integrations/motioneye/">motionEye integration</a> should vastly simplify the setup. However, I have not yet had time to test it.</p>]]></content><author><name>Thomas Aldrian</name></author><category term="smart-home" /><category term="Smart Home" /><category term="ESPHome" /><category term="Home Assistant" /><category term="hass.io" /><summary type="html"><![CDATA[A guide to setting up ESPHome-based cameras with both Home Assistant and motionEye.]]></summary></entry><entry><title type="html">Hacking Sonoff T4EU1C with ESPHOME</title><link href="https://weissnix4711.github.io/smart-home/2020/12/13/sonoff-t4eu1c/" rel="alternate" type="text/html" title="Hacking Sonoff T4EU1C with ESPHOME" /><published>2020-12-13T00:00:00+00:00</published><updated>2020-12-13T00:00:00+00:00</updated><id>https://weissnix4711.github.io/smart-home/2020/12/13/sonoff-t4eu1c</id><content type="html" xml:base="https://weissnix4711.github.io/smart-home/2020/12/13/sonoff-t4eu1c/"><![CDATA[<h1 id="whats-this-a-no-neutral-wifi-controlled-smart-switch-made-by-sonoff">What’s this? A no-neutral WiFi-controlled smart switch made by Sonoff?</h1>
+
+<p>Yep, that’s right. Just like the previous TX models <em>(Touch, T1, new-T1, T2, and T3)</em>, the T4 can be wirelessly controlled with the eWeLink app, or the touch sensor, and has a small LED to help you locate the switch in the dark. And best of all, there is no neutral connection required - only live in, and out (to the light bulb). Want to know more about how it works? I suggest watching <a href="https://www.youtube.com/watch?v=VNYcD7MEp4A">this YouTube video by SuperHouseTV</a>.</p>
+
+<p>Before you go out and buy one for yourself, it’s important to note the few cons which exist with the new T4’s.</p>
+
+<ul>
+  <li>Firstly, they will (most likely) not work with any device which <em>isn’t</em> as light bulb. You cannot use them as a general-purpose smart switch.</li>
+  <li>Also, LEDs and CFLs <em>are</em> supported, but require you to connect the included “anti flicker module” in parallel to the bulb(s).</li>
+  <li>443 MHz is <em>not</em> supported by the T4 model, incase you were one of the three people in the world who actually used this feature.</li>
+</ul>
+
+<p>Like all of Sonoff’s products, the T4 is really easy to flash with your favourite custom firmware. I decided to go with ESPHome, because of the easy integration with <a href="https://hass.io/">Home Assistant</a> and super easy yaml configuration, but tasmota and espurna will also work.</p>
+
+<h1 id="how-should-i-flash">How should I flash?</h1>
+
+<p>For the first flash, you <strong>will most likely</strong> need to connect via UART. See below as to why SonOTA currently doesn’t work.</p>
+
+<h2 id="sonota">SonOTA</h2>
+
+<p>Sadly, the devices appear to all ship with firmware version 3, and are therefore not compatible with SonOTA. Even if SonOTA does end up adding support for v3, I would not recommend using this method. The device is <em>designed</em> to be easily taken apart, and it’s super easy to connect up to it via serial.</p>
+
+<h2 id="serial">Serial</h2>
+
+<h3 id="raspberry-pi">Raspberry Pi</h3>
+
+<p>If you happen to have a Raspberry Pi (or similar SBC with <strong>3v3</strong> UART interface), you could use it without the need for an adaptor. This is the method I ended up choosing, as I did not happen to have a TTL-USB adaptor laying around, although I cannot recommend it for beginners. For further information, I recommend following these two guides:</p>
+
+<ul>
+  <li><a href="https://tasmota.github.io/docs/Flash-Sonoff-using-Raspberry-Pi/">Tasmota - Flash Sonoff using Raspberry Pi</a></li>
+  <li><a href="https://www.sigmdel.ca/michel/ha/sonoff/flashing_sonoff_en.html">sigmdel.ca - Flashing a Sonoff with RPI</a></li>
+</ul>
+
+<p>PORT: Will most likely be /dev/ttyS0 on a RPI 3/4 or /dev/ttyAMA0 on a Pi 1/2/zero</p>
+
+<h3 id="ttl-usb-adaptor">TTL-USB Adaptor</h3>
+
+<p>The <a href="https://cdn.sparkfun.com/datasheets/Dev/Arduino/Other/CH340DS1.PDF">CH340G</a> appears to be the most common USB-SERIAL adaptor, although others (like FTDI FT232 or CP2102 will also work). They are extremely cheap, especially from eBay or AliExpress, and are <em>extremely</em> useful. It’s never too late to pick one (or 5) up. Be aware though, any ESP866-based device <strong>might get fried by 5v</strong>. Always remember to set your adaptor to 3v3.</p>
+
+<p>PORT: Depends on your OS. On Linux, it is likely <code class="language-plaintext highlighter-rouge">/dev/ttyUSB0</code>. On Windows, <code class="language-plaintext highlighter-rouge">COM1</code> and on MacOS, <code class="language-plaintext highlighter-rouge">/dev/tty.usbserial</code>.</p>
+
+<h3 id="an-alternative-if-you-dont-have-either-of-the-above---nodemcu-or-other-development-board">An alternative if you don’t have either of the above - NodeMCU or other development board!</h3>
+
+<p>Many ESP8266 / ESP32 development boards come with an onboard USB port, TTL-USB adaptor and 3v3 regulator. In this example, I use a NodeMCU, but you do not need to do the same. Just make sure your device is 3v3 not 5v (eg. many Arduino’s), as this <strong>may fry your Sonoff T4</strong>.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>NodeMCU</th>
+      <th>Sonoff</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>3v3</td>
+      <td>3v3</td>
+    </tr>
+    <tr>
+      <td>GND</td>
+      <td>GND</td>
+    </tr>
+    <tr>
+      <td>TX</td>
+      <td>TX</td>
+    </tr>
+    <tr>
+      <td>RX</td>
+      <td>RX</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><strong>Note:</strong></p>
+
+<ul>
+  <li>The TX and RX pins are “backwards”. This is correct.</li>
+  <li>GND must also be connected to the NodeMCU’s ENable pin. This disables the NodeMCU.</li>
+</ul>
+
+<p>You can then plugin in your PC / Laptop to the development board via USB.</p>
+
+<h3 id="compiling-your-binary">Compiling your binary</h3>
+
+<p>This step will depend on which firmware you decide to use. ESPHome has a convenient setup wizard (<code class="language-plaintext highlighter-rouge">esphome your_node_name.yaml wizard</code>), and you can then compile the binary with <code class="language-plaintext highlighter-rouge">esphome your_node_name.yaml compile</code>. The binary will be located in <code class="language-plaintext highlighter-rouge">./your_node_name/.pioenvs/your_node_name/firmware.bin</code>.</p>
+
+<p>Whichever firmware you choose, <strong>make sure you enable OTA updates, so you can upload new firmware later on without needing to take the switch apart</strong>.</p>
+
+<h3 id="setting-the-device-into-flashing-mode">Setting the device into flashing mode</h3>
+
+<p>The GPIO pin 0 needs to be connected to ground for the Sonoff T4 to be put into flashing mode. This is best achieved by connecting R10 (on the back of the PCB) to GND for ~10 seconds while the device is turned on (you connect the 3v3 from your serial adaptor).</p>
+
+<p><img src="/assets/images/2020-12-13-sonoff-t4eu1c/r10.jpg" alt="r10" /></p>
+
+<h3 id="gui-flashing-tools-for-beginners">GUI flashing tools (for beginners)</h3>
+
+<p>Among your options are <a href="https://github.com/tasmota/tasmotizer">Tasmotizer</a> and <a href="https://github.com/esphome/esphome-flasher/">ESPHome-flasher</a>. Both are extremely intuitive so I won’t bother explaining how to use them.</p>
+
+<h3 id="flashing-with-esptoolpy-slightly-more-advanced">Flashing with esptool.py (<em>slightly more</em> advanced)</h3>
+
+<p>ESPTool requires either Python2.7, Python3.4 or newer. The latest stable release is easily installed with:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>pip2 <span class="nb">install </span>esptool <span class="c"># For Python2</span>
+<span class="nv">$ </span>pip3 <span class="nb">install </span>esptool <span class="c"># For Python3</span>
+</code></pre></div></div>
+
+<ul>
+  <li>Getting errors with pip3? Try <code class="language-plaintext highlighter-rouge">python -m pip install esptool</code></li>
+  <li>On Windows or want an executable? Try <a href="https://github.com/igrr/esptool-ck/releases">this</a> instead of installing with pip.</li>
+</ul>
+
+<h4 id="optional-make-a-backup-of-the-flash">(Optional) make a backup of the flash</h4>
+
+<p>You can do this with <code class="language-plaintext highlighter-rouge">esptool.py -p PORT read_flash 0 0x100000 flash_contents.bin</code>, where PORT depends on whether you are on Windows, using a USB adaptor, or Raspberry Pi. A new file will be created in your current working directory, called <code class="language-plaintext highlighter-rouge">flash_contents.bin</code>.</p>
+
+<p>The Sonoff T4 works with the default baud rate of 115200. You do not need to bother changing this.</p>
+
+<h4 id="writing-your-new-binary">Writing your new binary</h4>
+
+<p>Now, you must power-cycle the device. Disconnect the 3v3 from your RPI / serial adaptor, short R10 to ground (using a jumper wire again), reconnect 3v3, wait 10 seconds, stop shorting R10 to ground.</p>
+
+<p>After power cycling the device, you can upload the new firmware with the following command:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nv">$ </span>esptool.py <span class="nt">-p</span> PORT write_flash 0x0 your_new_firmware.bin
+</code></pre></div></div>
+
+<p>Disconnect 3v3 one final time, then reconnect it (without the jumper wire between R10 and GND). Your T4 should connect to whatever WiFi network you specified when compiling the binary, and it should be fully functional (minus not having the relay connected). Once you have verified the device works, you can disconnect your serial adaptor / RPI and install the T4 in the desired location (following the instructions from the original manual).</p>
+
+<p><img src="/assets/images/2020-12-13-sonoff-t4eu1c/wiring-diagram.jpg" alt="wiring-diagram" /></p>
+
+<h1 id="making-and-uploading-overtheair-the-final-firmware">Making and uploading (OverTheAir) the final firmware</h1>
+
+<p>Below you can find all three controllable components and which GPIO pin they are connected to. This will be helpful for you to configure your custom firmware.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>GPIO #</th>
+      <th>Component</th>
+      <th>Notes</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>GPIO0</td>
+      <td>Touch Button 1</td>
+      <td>Inverted</td>
+    </tr>
+    <tr>
+      <td>GPIO12</td>
+      <td>Relay 1</td>
+      <td>Inverted</td>
+    </tr>
+    <tr>
+      <td>GPIO13</td>
+      <td>Led 1</td>
+      <td>Inverted</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>There currently only exists one variant of the T4, called T4EU1C. It only has one touch button and relay. If a 2 channel variant is released, the second relay will likely be on GPIO pin 5 and the second button on pin 9.</p>
+
+<h2 id="my-own-configuration-for-esphome">My own configuration for ESPHome</h2>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">esphome</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">light_switch</span>
+  <span class="na">platform</span><span class="pi">:</span> <span class="s">ESP8266</span>
+  <span class="na">board</span><span class="pi">:</span> <span class="s">esp01_1m</span>
+
+<span class="na">wifi</span><span class="pi">:</span>
+  <span class="na">ssid</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Thomas</span><span class="nv"> </span><span class="s">Home"</span>
+  <span class="na">password</span><span class="pi">:</span> <span class="s2">"</span><span class="s">NOPE!!"</span>
+
+  <span class="c1"># Enable fallback hotspot (captive portal) in case wifi connection fails</span>
+  <span class="na">ap</span><span class="pi">:</span>
+    <span class="na">ssid</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Light</span><span class="nv"> </span><span class="s">Switch"</span>
+    <span class="na">password</span><span class="pi">:</span> <span class="s2">"</span><span class="s">NOPE!!"</span>
+
+<span class="na">captive_portal</span><span class="pi">:</span>
+
+<span class="c1"># Enable logging</span>
+<span class="na">logger</span><span class="pi">:</span>
+
+<span class="c1"># Enable Home Assistant API</span>
+<span class="na">api</span><span class="pi">:</span>
+
+<span class="na">ota</span><span class="pi">:</span>
+
+<span class="na">binary_sensor</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">platform</span><span class="pi">:</span> <span class="s">gpio</span>
+    <span class="na">pin</span><span class="pi">:</span>
+      <span class="na">number</span><span class="pi">:</span> <span class="s">GPIO0</span>
+      <span class="na">mode</span><span class="pi">:</span> <span class="s">INPUT_PULLUP</span>
+      <span class="na">inverted</span><span class="pi">:</span> <span class="no">true</span>
+    <span class="na">id</span><span class="pi">:</span> <span class="s">button_1</span>
+    <span class="na">on_press</span><span class="pi">:</span>
+      <span class="na">then</span><span class="pi">:</span>
+        <span class="pi">-</span> <span class="na">light.toggle</span><span class="pi">:</span> <span class="s">light_1</span>
+
+<span class="na">output</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">platform</span><span class="pi">:</span> <span class="s">gpio</span>
+    <span class="na">pin</span><span class="pi">:</span> <span class="s">GPIO12</span>
+    <span class="na">id</span><span class="pi">:</span> <span class="s">relay_1</span>
+
+<span class="na">light</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">platform</span><span class="pi">:</span> <span class="s">binary</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Light"</span>
+    <span class="na">id</span><span class="pi">:</span> <span class="s">light_1</span>
+    <span class="na">output</span><span class="pi">:</span> <span class="s">relay_1</span>
+
+<span class="na">status_led</span><span class="pi">:</span>
+  <span class="na">pin</span><span class="pi">:</span>
+    <span class="na">number</span><span class="pi">:</span> <span class="s">GPIO13</span>
+    <span class="na">inverted</span><span class="pi">:</span> <span class="no">true</span>
+</code></pre></div></div>]]></content><author><name>Thomas Aldrian</name></author><category term="smart-home" /><category term="Sonoff" /><category term="t4" /><category term="t4eu1c" /><category term="ESPHome" /><category term="Home Assistant" /><category term="hass.io" /><summary type="html"><![CDATA[No-neutral ESP8266-based smart switch by Sonoff]]></summary></entry></feed>

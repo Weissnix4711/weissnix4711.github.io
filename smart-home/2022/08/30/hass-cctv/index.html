@@ -1,0 +1,886 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>My Home Assistant CCTV camera setup | Thomas Aldrian</title>
+<meta name="description" content="A guide to setting up ESPHome-based cameras with both Home Assistant and motionEye.">
+
+
+  <meta name="author" content="Thomas Aldrian">
+  
+  <meta property="article:author" content="Thomas Aldrian">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_GB">
+<meta property="og:site_name" content="Thomas Aldrian">
+<meta property="og:title" content="My Home Assistant CCTV camera setup">
+<meta property="og:url" content="https://weissnix4711.github.io/smart-home/2022/08/30/hass-cctv/">
+
+
+  <meta property="og:description" content="A guide to setting up ESPHome-based cameras with both Home Assistant and motionEye.">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2022-08-30T00:00:00+00:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://weissnix4711.github.io/smart-home/2022/08/30/hass-cctv/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Thomas Aldrian",
+      "url": "https://weissnix4711.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Thomas Aldrian Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/pfp.png" alt="Thomas Aldrian"></a>
+        
+        <a class="site-title" href="/">
+          Thomas Aldrian
+          <span class="site-subtitle">My blog</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li><li class="masthead__menu-item">
+              <a href="/social/">Social</a>
+            </li><li class="masthead__menu-item">
+              <a href="/projects/">My Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="https://weissnix4711.github.io/" itemprop="item"><span itemprop="name">~</span></a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/smart-home" itemprop="item"><span itemprop="name">Smart home</span></a>
+          <meta itemprop="position" content="2" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/2022" itemprop="item"><span itemprop="name">2022</span></a>
+          <meta itemprop="position" content="3" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/08" itemprop="item"><span itemprop="name">08</span></a>
+          <meta itemprop="position" content="4" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/30" itemprop="item"><span itemprop="name">30</span></a>
+          <meta itemprop="position" content="5" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">My Home Assistant CCTV camera setup</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  <!--
+  Modified from original:
+  https://github.com/mmistakes/minimal-mistakes/blob/master/_includes/author-profile.html
+  Minimal Mistakes Jekyll theme
+
+  Distributed under the MIT License.
+  See https://raw.githubusercontent.com/mmistakes/minimal-mistakes/master/LICENSE
+-->
+
+
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+    <div class="author__avatar">
+      <a href="https://weissnix4711.github.io/">
+        <img src="/assets/images/pfp.png" alt="Thomas Aldrian" itemprop="image" class="u-photo">
+      </a>
+    </div>
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://weissnix4711.github.io/" itemprop="url">Thomas Aldrian</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>Electronic and Information Engineering Student, Imperial College London</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">London, UK</span>
+        </li>
+      
+
+      
+        
+          
+            <li><a href="https://gitlab.com/weissnix47111" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-gitlab" aria-hidden="true"></i><span class="label">GitLab</span></a></li>
+          
+        
+          
+            <li><a href="https://github.com/Weissnix4711" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+            <li><a href="https://fosstodon.org/@Weissnix4711" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-mastodon" aria-hidden="true"></i><span class="label">Mastodon</span></a></li>
+          
+        
+          
+            <li><a href="mailto:aldrian.thom@proton.me" rel="nofollow noopener noreferrer me"><i class="fas fa-fw fa-envelope" aria-hidden="true"></i><span class="label">Email</span></a></li>
+          
+        
+          
+            <li><a href="https://ko-fi.com/thomasaldrian" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fas fa-fw fa-money-bill-wave" aria-hidden="true"></i><span class="label">Ko-fi</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="My Home Assistant CCTV camera setup">
+    <meta itemprop="description" content="A guide to setting up ESPHome-based cameras with both Home Assistant and motionEye.">
+    <meta itemprop="datePublished" content="2022-08-30T00:00:00+00:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">My Home Assistant CCTV camera setup
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#esphome-setup">ESPHome setup</a><ul><li><a href="#configure-firmware">Configure firmware</a></li></ul></li><li><a href="#home-assistant-setup">Home Assistant setup</a><ul><li><a href="#create-token">Create token</a></li><li><a href="#nginx-addon">Nginx Addon</a><ul><li><a href="#configuration">Configuration</a></li><li><a href="#extra-config">Extra config</a></li></ul></li><li><a href="#motioneye">MotionEye</a></li></ul></li></ul>
+
+            </nav>
+          </aside>
+        
+        <h1 id="esphome-setup">ESPHome setup</h1>
+
+<p>First, we have to configure and install ESPHome on the camera.</p>
+
+<p>Most ESP32-CAM modules do not have a USB-UART bridge onboard, so you will need an external adaptor. Those based on the CH340G chip are cheap and readily available from eBay, Aliexpress, etc, and perfectly suitable for flashing ESP8266/32 and various Arduino devices. Make sure that the adapter you use is set to 3V3, as 5V can kill the ESP.</p>
+
+<p>I will not cover how to flash ESPHome firmware here, but the <a href="https://esphome.io/">ESPHome wiki</a> does quite a good job. If you still have questions, try asking in the <a href="https://community.home-assistant.io/c/esphome/36">ESPHome forums</a> or on <a href="https://discord.gg/KhAMKrd">Discord</a>.</p>
+
+<h2 id="configure-firmware">Configure firmware</h2>
+
+<p>I have the Ai-Thinker ESP32-CAM module. You may have to edit the configuration below to fit your camera module. Also, be warned that some modules can get very hot, in particular the M5Stack.</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">esphome</span><span class="pi">:</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s">living-room-camera</span>
+  <span class="na">platform</span><span class="pi">:</span> <span class="s">ESP32</span>
+  <span class="c1"># board: esp32cam</span>
+  <span class="na">board</span><span class="pi">:</span> <span class="s">esp32dev</span>
+
+<span class="na">wifi</span><span class="pi">:</span>
+  <span class="na">ssid</span><span class="pi">:</span> <span class="s2">"</span><span class="s">WiFiNetwork"</span>
+  <span class="na">password</span><span class="pi">:</span> <span class="s2">"</span><span class="s">WiFIPassword"</span>
+
+  <span class="c1"># Enable fallback hotspot (captive portal) in case wifi connection fails</span>
+  <span class="na">ap</span><span class="pi">:</span>
+    <span class="na">ssid</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Living</span><span class="nv"> </span><span class="s">Room</span><span class="nv"> </span><span class="s">Camera"</span>
+    <span class="na">password</span><span class="pi">:</span> <span class="s2">"</span><span class="s">FallbackPassword"</span>
+
+  <span class="na">power_save_mode</span><span class="pi">:</span> <span class="s">NONE</span>
+
+<span class="na">captive_portal</span><span class="pi">:</span>
+
+<span class="c1"># Enable logging</span>
+<span class="na">logger</span><span class="pi">:</span>
+
+<span class="c1"># Enable Home Assistant API</span>
+<span class="na">api</span><span class="pi">:</span>
+
+<span class="c1"># Enable over-the-air updates</span>
+<span class="na">ota</span><span class="pi">:</span>
+
+<span class="c1"># Camera</span>
+<span class="na">esp32_camera</span><span class="pi">:</span>
+  <span class="na">external_clock</span><span class="pi">:</span>
+    <span class="na">pin</span><span class="pi">:</span> <span class="s">GPIO0</span>
+    <span class="na">frequency</span><span class="pi">:</span> <span class="s">20MHz</span>
+  <span class="na">i2c_pins</span><span class="pi">:</span>
+    <span class="na">sda</span><span class="pi">:</span> <span class="s">GPIO26</span>
+    <span class="na">scl</span><span class="pi">:</span> <span class="s">GPIO27</span>
+  <span class="na">data_pins</span><span class="pi">:</span> <span class="pi">[</span><span class="nv">GPIO5</span><span class="pi">,</span> <span class="nv">GPIO18</span><span class="pi">,</span> <span class="nv">GPIO19</span><span class="pi">,</span> <span class="nv">GPIO21</span><span class="pi">,</span> <span class="nv">GPIO36</span><span class="pi">,</span> <span class="nv">GPIO39</span><span class="pi">,</span> <span class="nv">GPIO34</span><span class="pi">,</span> <span class="nv">GPIO35</span><span class="pi">]</span>
+  <span class="na">vsync_pin</span><span class="pi">:</span> <span class="s">GPIO25</span>
+  <span class="na">href_pin</span><span class="pi">:</span> <span class="s">GPIO23</span>
+  <span class="na">pixel_clock_pin</span><span class="pi">:</span> <span class="s">GPIO22</span>
+  <span class="na">power_down_pin</span><span class="pi">:</span> <span class="s">GPIO32</span>
+  <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Living</span><span class="nv"> </span><span class="s">Room</span><span class="nv"> </span><span class="s">Camera"</span>
+  <span class="na">id</span><span class="pi">:</span> <span class="s">camera</span>
+  <span class="na">max_framerate</span><span class="pi">:</span> <span class="s">10 fps</span>
+  <span class="na">idle_framerate</span><span class="pi">:</span> <span class="s">0.2 fps</span>
+  <span class="na">resolution</span><span class="pi">:</span> <span class="s">1600x1200</span>
+  <span class="na">jpeg_quality</span><span class="pi">:</span> <span class="m">10</span>
+  <span class="na">contrast</span><span class="pi">:</span> <span class="m">1</span>
+  <span class="na">brightness</span><span class="pi">:</span> <span class="m">0</span>
+  <span class="na">saturation</span><span class="pi">:</span> <span class="m">0</span>
+  <span class="na">vertical_flip</span><span class="pi">:</span> <span class="no">true</span>
+  <span class="na">horizontal_mirror</span><span class="pi">:</span> <span class="no">true</span>
+
+<span class="c1"># Flash light (optional)</span>
+<span class="na">output</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">platform</span><span class="pi">:</span> <span class="s">gpio</span>
+    <span class="na">pin</span><span class="pi">:</span> <span class="s">GPIO4</span>
+    <span class="na">id</span><span class="pi">:</span> <span class="s">flash</span>
+
+<span class="c1"># Light (optional)</span>
+<span class="na">light</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">platform</span><span class="pi">:</span> <span class="s">binary</span>
+    <span class="na">output</span><span class="pi">:</span> <span class="s">flash</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Living</span><span class="nv"> </span><span class="s">Room</span><span class="nv"> </span><span class="s">Camera</span><span class="nv"> </span><span class="s">Flash"</span>
+
+<span class="c1"># Restart switch (optional)</span>
+<span class="na">switch</span><span class="pi">:</span>
+  <span class="pi">-</span> <span class="na">platform</span><span class="pi">:</span> <span class="s">restart</span>
+    <span class="na">name</span><span class="pi">:</span> <span class="s2">"</span><span class="s">Living</span><span class="nv"> </span><span class="s">Room</span><span class="nv"> </span><span class="s">Camera</span><span class="nv"> </span><span class="s">Restart"</span>
+</code></pre></div></div>
+
+<p>For more information on setting up various camera modules, see the <a href="https://esphome.io/components/esp32_camera.html">ESPHome wiki</a>.</p>
+
+<h1 id="home-assistant-setup">Home Assistant setup</h1>
+
+<h2 id="create-token">Create token</h2>
+
+<p>Click on your profile in the lower left corner of the Home Assistant web UI. Scroll down on this page all the way to the section titled “Long-Lived Access Tokens”.</p>
+
+<p>Here, create a token. Name it anything you like, I recommend something like <code class="language-plaintext highlighter-rouge">motioneye</code> to easily differentiate it from any other long-lived tokens you may have.</p>
+
+<h2 id="nginx-addon">Nginx Addon</h2>
+
+<p>Install the Nginx Proxy core addon via the addon store in Home Assistant settings, if you haven’t already.</p>
+
+<h3 id="configuration">Configuration</h3>
+
+<p>On the addon page, in Configuration &gt; Options &gt; Customize, paste the following:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">active</span><span class="pi">:</span> <span class="no">true</span>
+<span class="na">default</span><span class="pi">:</span> <span class="s">nginx_proxy_default*.conf</span>
+<span class="na">servers</span><span class="pi">:</span> <span class="s">nginx_proxy/*.conf</span>
+</code></pre></div></div>
+
+<p>This allows you to add custom server configs in the <code class="language-plaintext highlighter-rouge">/share/nginx_proxy/</code> directory. You can do so via the terminal addon, or samba.</p>
+
+<p>On the same page, add a port for HTTP (non-SSL). This cannot be already in use by another addon, or by Home Assistant. I suggest 8080.</p>
+
+<h3 id="extra-config">Extra config</h3>
+
+<p>Add a file in <code class="language-plaintext highlighter-rouge">/share/nginx_proxy/motioneye.conf</code> and copy the config below. Remember the following:</p>
+
+<ul>
+  <li>Replace <code class="language-plaintext highlighter-rouge">Bearer xxxx</code> with your own token. It should be the same length as shown below.</li>
+  <li>Replace the port <code class="language-plaintext highlighter-rouge">8080</code> in <code class="language-plaintext highlighter-rouge">proxy_set_header Host $host:8080;</code> with whatever port you chose earlier for HTTP.</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>server {
+    server_name localhost;
+    listen 80;
+
+    location /api/camera_proxy {
+        proxy_pass http://homeassistant:8123/api/camera_proxy;
+        proxy_set_header Host $host:8080;
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Authorization "Bearer rJeWKWcwvByeuuXTWdRyEtuKwfNWRJeRwtk6.QhF733CgyngaxlOPQH4aZdLURAG7ORUkTIUAlTmKT4x9pQMpevjiTR7fBwXnbzKS0pAzgNyvRS1LkOqEOBYD0AbcALu3VmTMfRIYRv.VhpZbpcNVbZKaT85-2dUSjXTTPBDzvcdjFYwVNeoIgB";
+    }
+}
+</code></pre></div></div>
+
+<p>Once this is done, restart the Nginx addon to make sure the new config is loaded.</p>
+
+<h2 id="motioneye">MotionEye</h2>
+
+<p>Install the motionEye addon via the addon store in Home Assistant settings, if you haven’t already.</p>
+
+<p>Open the web UI and login with the default username <code class="language-plaintext highlighter-rouge">admin</code> and no password. From here, add a new camera of type “Network Camera”. In the URL field, paste <code class="language-plaintext highlighter-rouge">http://localhost:8080/api/camera_proxy/camera.living_room_camera</code> and replace the port with whatever you chose earlier, and the entity name (in this case camera.living_room_camera) with the entity name of your own camera.</p>
+
+<p>You should now be able to see the camera stream from within motionEye, and configure motion detection, movies/stills and notifications as desired.</p>
+
+<p>I will create a further guide for motion events, automations and push notifications via the Home Assistant app, later. Previously I used a series of webhooks to accomplish this, though in theory the new <a href="https://www.home-assistant.io/integrations/motioneye/">motionEye integration</a> should vastly simplify the setup. However, I have not yet had time to test it.</p>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/esphome" class="page__taxonomy-item" rel="tag">ESPHome</a><span class="sep">, </span>
+    
+      <a href="/tags/hass-io" class="page__taxonomy-item" rel="tag">hass.io</a><span class="sep">, </span>
+    
+      <a href="/tags/home-assistant" class="page__taxonomy-item" rel="tag">Home Assistant</a><span class="sep">, </span>
+    
+      <a href="/tags/smart-home" class="page__taxonomy-item" rel="tag">Smart Home</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/smart-home" class="page__taxonomy-item" rel="tag">smart-home</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2022-08-30T00:00:00+00:00">August 30, 2022</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on..</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=My+Home+Assistant+CCTV+camera+setup%20https%3A%2F%2Fweissnix4711.github.io%2Fsmart-home%2F2022%2F08%2F30%2Fhass-cctv%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on.. Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fweissnix4711.github.io%2Fsmart-home%2F2022%2F08%2F30%2Fhass-cctv%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on.. Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fweissnix4711.github.io%2Fsmart-home%2F2022%2F08%2F30%2Fhass-cctv%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on.. LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/smart-home/2020/12/13/sonoff-t4eu1c/" class="pagination--pager" title="Hacking Sonoff T4EU1C with ESPHOME
+">Previous</a>
+    
+    
+      <a href="/linux-mobile/2023/03/06/dnscrypt/" class="pagination--pager" title="DNSCrypt + Dnsmasq setup with Waydroid
+">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Comments</h4>
+      <section id="utterances-comments"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You May Also Enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/homelab/2024/05/14/dell-h310-it-mode/" rel="permalink">Dell PERC H310 raid card flashed to IT Mode
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Guide to flashing the Dell PERC H310 card to IT Mode
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/teardown/2023/12/27/pinephone-battery-charger/" rel="permalink">PinePhone (Pro) Battery Charger Teardown
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Teardown of the Pine64 Pinephone standalone battery charger
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/linux-mobile/2023/03/06/dnscrypt/" rel="permalink">DNSCrypt + Dnsmasq setup with Waydroid
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">A short and simple guide to setting up DNSCrypt and dnsmasq.
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/smart-home/2020/12/13/sonoff-t4eu1c/" rel="permalink">Hacking Sonoff T4EU1C with ESPHOME
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          5 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">No-neutral ESP8266-based smart switch by Sonoff
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+      
+        
+          <li><a href="https://github.com/Weissnix4711/weissnix4711.github.io" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2025 Thomas Aldrian. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+    <script>
+  'use strict';
+
+  (function() {
+    var commentContainer = document.querySelector('#utterances-comments');
+
+    if (!commentContainer) {
+      return;
+    }
+
+    var script = document.createElement('script');
+    script.setAttribute('src', 'https://utteranc.es/client.js');
+    script.setAttribute('repo', 'weissnix4711/weissnix4711.github.io');
+    script.setAttribute('issue-term', 'pathname');
+    script.setAttribute('theme', 'github-dark');
+    script.setAttribute('crossorigin', 'anonymous');
+
+    commentContainer.appendChild(script);
+  })();
+</script>
+
+  
+
+
+
+
+
+  </body>
+</html>
