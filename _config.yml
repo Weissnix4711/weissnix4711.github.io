@@ -27,7 +27,7 @@ description: >- # this means to ignore newlines until "baseurl:"
   Welcome to my blog!
 
 name: "Thomas Aldrian"
-email: dev.aldrian@gmail.com
+email: aldrian.thom@proton.me
 
 # URLs
 baseurl: "" # the subpath of your site, e.g. /blog
@@ -63,15 +63,9 @@ comments:
 author:
   name: "Thomas Aldrian"
   avatar: "/assets/images/pfp.png"
-  bio: "Sometimes writes good code."
-  location: "Somewhere"
+  bio: "Electronic and Information Engineering Student, Imperial College London"
+  location: "London, UK"
   links:
-    - label: "Discord"
-      icon: "fab fa-fw fa-discord"
-      url: "https://pastebin.com/mdCSXtNJ"
-    - label: "Reddit"
-      icon: "fab fa-fw fa-reddit"
-      url: "https://reddit.com/u/Weissnix_4711"
     - label: "GitLab"
       icon: "fab fa-fw fa-gitlab"
       url: "https://gitlab.com/weissnix47111"
@@ -81,12 +75,9 @@ author:
     - label: "Mastodon"
       icon: "fab fa-fw fa-mastodon"
       url: "https://fosstodon.org/@Weissnix4711"
-    - label: "Twitter"
-      icon: "fab fa-fw fa-twitter"
-      url: "https://twitter.com/Weissnix4711"
-    - label: "dev.aldrian@gmail.com"
+    - label: "Email"
       icon: "fas fa-fw fa-envelope"
-      url: "mailto:dev.aldrian@gmail.com"
+      url: "mailto:aldrian.thom@proton.me"
     - label: "Ko-fi"
       icon: "fas fa-fw fa-money-bill-wave"
       url: "https://ko-fi.com/thomasaldrian"
