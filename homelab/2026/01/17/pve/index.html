@@ -1,0 +1,1017 @@
+<!doctype html>
+<!--
+  Minimal Mistakes Jekyll Theme 4.24.0 by Michael Rose
+  Copyright 2013-2020 Michael Rose - mademistakes.com | @mmistakes
+  Free for personal and commercial use under the MIT license
+  https://github.com/mmistakes/minimal-mistakes/blob/master/LICENSE
+-->
+<html lang="en" class="no-js">
+  <head>
+    <meta charset="utf-8">
+
+<!-- begin _includes/seo.html --><title>My homelab setup: Proxmox VE | Thomas Aldrian</title>
+<meta name="description" content="Proxmox setup for my new, all-NVMe homelab &amp; NAS.">
+
+
+  <meta name="author" content="Thomas Aldrian">
+  
+  <meta property="article:author" content="Thomas Aldrian">
+  
+
+
+<meta property="og:type" content="article">
+<meta property="og:locale" content="en_GB">
+<meta property="og:site_name" content="Thomas Aldrian">
+<meta property="og:title" content="My homelab setup: Proxmox VE">
+<meta property="og:url" content="https://weissnix4711.github.io/homelab/2026/01/17/pve/">
+
+
+  <meta property="og:description" content="Proxmox setup for my new, all-NVMe homelab &amp; NAS.">
+
+
+
+
+
+
+
+  <meta property="article:published_time" content="2026-01-17T00:00:00+00:00">
+
+
+
+
+
+
+<link rel="canonical" href="https://weissnix4711.github.io/homelab/2026/01/17/pve/">
+
+
+
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    
+      "@type": "Person",
+      "name": "Thomas Aldrian",
+      "url": "https://weissnix4711.github.io/"
+    
+  }
+</script>
+
+
+
+
+
+
+
+<!-- end _includes/seo.html -->
+
+
+
+  <link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Thomas Aldrian Feed">
+
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script>
+  document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/g, '') + ' js ';
+</script>
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<link rel="preload" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5/css/all.min.css"></noscript>
+
+
+
+    <!-- start custom head snippets -->
+
+<!-- insert favicons. use https://realfavicongenerator.net/ -->
+
+<!-- end custom head snippets -->
+
+  </head>
+
+  <body class="layout--single">
+    <nav class="skip-links">
+  <ul>
+    <li><a href="#site-nav" class="screen-reader-shortcut">Skip to primary navigation</a></li>
+    <li><a href="#main" class="screen-reader-shortcut">Skip to content</a></li>
+    <li><a href="#footer" class="screen-reader-shortcut">Skip to footer</a></li>
+  </ul>
+</nav>
+
+    <!--[if lt IE 9]>
+<div class="notice--danger align-center" style="margin: 0;">You are using an <strong>outdated</strong> browser. Please <a href="https://browsehappy.com/">upgrade your browser</a> to improve your experience.</div>
+<![endif]-->
+
+    
+
+<div class="masthead">
+  <div class="masthead__inner-wrap">
+    <div class="masthead__menu">
+      <nav id="site-nav" class="greedy-nav">
+        
+          <a class="site-logo" href="/"><img src="/assets/images/pfp.png" alt="Thomas Aldrian"></a>
+        
+        <a class="site-title" href="/">
+          Thomas Aldrian
+          <span class="site-subtitle">My blog</span>
+        </a>
+        <ul class="visible-links"><li class="masthead__menu-item">
+              <a href="/about/">About</a>
+            </li><li class="masthead__menu-item">
+              <a href="/social/">Social</a>
+            </li><li class="masthead__menu-item">
+              <a href="/projects/">My Projects</a>
+            </li></ul>
+        
+        <button class="search__toggle" type="button">
+          <span class="visually-hidden">Toggle search</span>
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button class="greedy-nav__toggle hidden" type="button">
+          <span class="visually-hidden">Toggle menu</span>
+          <div class="navicon"></div>
+        </button>
+        <ul class="hidden-links hidden"></ul>
+      </nav>
+    </div>
+  </div>
+</div>
+
+
+    <div class="initial-content">
+      
+
+
+  
+    
+
+
+
+<nav class="breadcrumbs">
+  <ol itemscope itemtype="https://schema.org/BreadcrumbList">
+    
+    
+    
+      
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="https://weissnix4711.github.io/" itemprop="item"><span itemprop="name">~</span></a>
+          <meta itemprop="position" content="1" />
+        </li>
+        <span class="sep">/</span>
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/homelab" itemprop="item"><span itemprop="name">Homelab</span></a>
+          <meta itemprop="position" content="2" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/2026" itemprop="item"><span itemprop="name">2026</span></a>
+          <meta itemprop="position" content="3" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/01" itemprop="item"><span itemprop="name">01</span></a>
+          <meta itemprop="position" content="4" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        
+        <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+          <a href="/categories/17" itemprop="item"><span itemprop="name">17</span></a>
+          <meta itemprop="position" content="5" />
+        </li>
+        <span class="sep">/</span>
+      
+    
+      
+      
+        <li class="current">My homelab setup: Proxmox VE</li>
+      
+    
+  </ol>
+</nav>
+
+  
+
+
+<div id="main" role="main">
+  
+  <div class="sidebar sticky">
+  <!--
+  Modified from original:
+  https://github.com/mmistakes/minimal-mistakes/blob/master/_includes/author-profile.html
+  Minimal Mistakes Jekyll theme
+
+  Distributed under the MIT License.
+  See https://raw.githubusercontent.com/mmistakes/minimal-mistakes/master/LICENSE
+-->
+
+
+
+
+<div itemscope itemtype="https://schema.org/Person" class="h-card">
+
+  
+    <div class="author__avatar">
+      <a href="https://weissnix4711.github.io/">
+        <img src="/assets/images/pfp.png" alt="Thomas Aldrian" itemprop="image" class="u-photo">
+      </a>
+    </div>
+  
+
+  <div class="author__content">
+    <h3 class="author__name p-name" itemprop="name">
+      <a class="u-url" rel="me" href="https://weissnix4711.github.io/" itemprop="url">Thomas Aldrian</a>
+    </h3>
+    
+      <div class="author__bio p-note" itemprop="description">
+        <p>Electronic and Information Engineering Student, Imperial College London</p>
+
+      </div>
+    
+  </div>
+
+  <div class="author__urls-wrapper">
+    <button class="btn btn--inverse">Follow</button>
+    <ul class="author__urls social-icons">
+      
+        <li itemprop="homeLocation" itemscope itemtype="https://schema.org/Place">
+          <i class="fas fa-fw fa-map-marker-alt" aria-hidden="true"></i> <span itemprop="name" class="p-locality">London, UK</span>
+        </li>
+      
+
+      
+        
+          
+            <li><a href="https://gitlab.com/weissnix47111" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-gitlab" aria-hidden="true"></i><span class="label">GitLab</span></a></li>
+          
+        
+          
+            <li><a href="https://github.com/Weissnix4711" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-github" aria-hidden="true"></i><span class="label">GitHub</span></a></li>
+          
+        
+          
+            <li><a href="https://fosstodon.org/@Weissnix4711" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fab fa-fw fa-mastodon" aria-hidden="true"></i><span class="label">Mastodon</span></a></li>
+          
+        
+          
+            <li><a href="mailto:aldrian.thom@proton.me" rel="nofollow noopener noreferrer me"><i class="fas fa-fw fa-envelope" aria-hidden="true"></i><span class="label">Email</span></a></li>
+          
+        
+          
+            <li><a href="https://ko-fi.com/thomasaldrian" rel="nofollow noopener noreferrer me" itemprop="sameAs"><i class="fas fa-fw fa-money-bill-wave" aria-hidden="true"></i><span class="label">Ko-fi</span></a></li>
+          
+        
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      
+
+      <!--
+  <li>
+    <a href="http://link-to-whatever-social-network.com/user/" itemprop="sameAs" rel="nofollow noopener noreferrer">
+      <i class="fas fa-fw" aria-hidden="true"></i> Custom Social Profile Link
+    </a>
+  </li>
+-->
+    </ul>
+  </div>
+</div>
+
+  
+  </div>
+
+
+
+  <article class="page" itemscope itemtype="https://schema.org/CreativeWork">
+    <meta itemprop="headline" content="My homelab setup: Proxmox VE">
+    <meta itemprop="description" content="Proxmox setup for my new, all-NVMe homelab &amp; NAS.">
+    <meta itemprop="datePublished" content="2026-01-17T00:00:00+00:00">
+    
+
+    <div class="page__inner-wrap">
+      
+        <header>
+          <h1 id="page-title" class="page__title" itemprop="headline">My homelab setup: Proxmox VE
+</h1>
+          
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          7 minute read
+        
+      </span>
+    
+  </p>
+
+
+        </header>
+      
+
+      <section class="page__content" itemprop="text">
+        
+          <aside class="sidebar__right sticky">
+            <nav class="toc">
+              <header><h4 class="nav__title"><i class="fas fa-file-alt"></i> On this page</h4></header>
+              <ul class="toc__menu"><li><a href="#configuring-proxmox-ve">Configuring Proxmox VE</a><ul><li><a href="#installation">Installation</a></li><li><a href="#dhcp">DHCP</a></li><li><a href="#pve-post-install-script">PVE post install script</a></li><li><a href="#swap">Swap</a></li><li><a href="#software-defined-networking">Software-Defined Networking</a><ul><li><a href="#masquerading-nat-with-nftables">Masquerading (NAT) with nftables</a><ul><li><a href="#firewall">Firewall</a></li><li><a href="#port-forwarding">Port Forwarding</a></li><li><a href="#dnsmasq">dnsmasq</a></li></ul></li></ul></li><li><a href="#logging-in-with-oidc">Logging in with OIDC</a></li></ul></li><li><a href="#guest-vms-and-containers">Guest VMs and containers</a><ul><li><a href="#home-assistant">Home Assistant</a></li></ul></li></ul>
+
+            </nav>
+          </aside>
+        
+        <p>In 2025/26 I built a new server to replace the old heap of shite I was running before. Having been asked about my configuration and general attitude to homelab stuff, I figured it was about time to write another blog post, or two…</p>
+
+<p>The first of which is this: how I install and configure Proxmox. There will be more posts about the hardware, specific VMs and services, identity management, etc. soon(TM).</p>
+
+<p>Disclaimer: this is not intended to be a tutorial, but I hope it may be useful—or at least vaguely interesting—to someone.</p>
+
+<h1 id="configuring-proxmox-ve">Configuring Proxmox VE</h1>
+
+<h2 id="installation">Installation</h2>
+
+<p>I have a single 1 TB NVMe boot disk for Proxmox - a WD SN750 which I happened to have spare.</p>
+
+<p>The boot drive contains little important data as</p>
+
+<ul>
+  <li>PVE can always be recreated</li>
+  <li>VM disks are regularly backed up externally</li>
+  <li>VMs themselves store little data locally, instead writing back to shares from TrueNAS</li>
+</ul>
+
+<p>This, along with somewhat better reliability from a lack of spinning rust, is why I am content with no redundancy for disk failure.</p>
+
+<p>I still use ZFS for the boot disk, simply for some of the convenience it provides with snapshots. Additionally, I set <code class="language-plaintext highlighter-rouge">copies=2</code> for some extra bitrot correction. It would be rare for bitrot to occur, and a scrub should always catch it regardless. However, only with multiple disks (expensive, overkill, and I am running out of PCIe lanes), or <code class="language-plaintext highlighter-rouge">copies</code> can ZFS correct errors automatically.</p>
+
+<p>One downside of ZFS is the unstable nature of swap space (swapvols are unstable <sup id="fnref:zfsswapvol" role="doc-noteref"><a href="#fn:zfsswapvol" class="footnote" rel="footnote">1</a></sup>, and swapfiles are not supported). ZFS also provides no way to shrink partitions, though you can grow partitions just fine, so I would suggest being more conservative with the <code class="language-plaintext highlighter-rouge">hdsize</code> option.</p>
+
+<p>I am aware of the existence of BTRFS, which would fix almost all the gripes I have with ZFS. In fact, I am using BTRFS on the machine I am writing this from. However, I decided against it due to being significantly less well tested or supported by Proxmox, though I’m sure for a simple single-node homelab setup like this it would likely be just fine. Perhaps not for enterprise. Also bear in mind RAID 5 &amp; 6 profiles are <em>still</em> unstable in BTRFS, for anyone planning on using multiple disks.</p>
+
+<p>In the installer I select: <code class="language-plaintext highlighter-rouge">ZFS raid0</code>, <code class="language-plaintext highlighter-rouge">copies=2</code>, and adjust <code class="language-plaintext highlighter-rouge">hdsize</code> to leave space for a swap partition.</p>
+
+<p>Finally, give it a static IP for now. DHCP can be configured later (with some caveats). Then reboot.</p>
+
+<h2 id="dhcp">DHCP</h2>
+
+<p>Also see the guide from free-pmx.org <sup id="fnref:dhcpfreepmx" role="doc-noteref"><a href="#fn:dhcpfreepmx" class="footnote" rel="footnote">2</a></sup>.</p>
+
+<p>Note that as of installing PVE 9.1 I did not need to manually install <code class="language-plaintext highlighter-rouge">isc-dhcp-client</code>.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt <span class="nb">install</span> <span class="nt">-y</span> libnss-myhostname
+<span class="nb">sed</span> <span class="nt">-i</span>.bak <span class="s1">'2d'</span> /etc/hosts
+<span class="nb">cp</span> /etc/gai.conf<span class="o">{</span>,.bak<span class="o">}</span>
+<span class="nb">cp</span> /etc/network/interfaces<span class="o">{</span>,.bak<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Configuring IPv4 precedence:</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gh">diff /etc/gai.conf{.bak,}
+</span><span class="p">54c54
+</span><span class="gd">&lt; #precedence ::ffff:0:0/96  100
+</span><span class="p">---
+</span><span class="gi">&gt; precedence ::ffff:0:0/96  100
+</span></code></pre></div></div>
+
+<p>And configure interfaces:</p>
+
+<div class="language-diff highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="gh">diff /etc/network/interfaces{.bak,}
+</span><span class="p">7,9c7
+</span><span class="gd">&lt; iface vmbr0 inet static
+&lt;       address 192.168.0.182/24
+&lt;       gateway 192.168.0.1
+</span><span class="p">---
+</span><span class="gi">&gt; iface vmbr0 inet dhcp
+</span></code></pre></div></div>
+
+<p>One could also delete the default created bridge and use the ethernet device directly, if only using an SDN <sup id="fnref:proxwikisdn" role="doc-noteref"><a href="#fn:proxwikisdn" class="footnote" rel="footnote">3</a></sup> vnet for all guests, but I will leave it for now.</p>
+
+<h2 id="pve-post-install-script">PVE post install script</h2>
+
+<p>The post-install script <sup id="fnref:pvepostinstallscript" role="doc-noteref"><a href="#fn:pvepostinstallscript" class="footnote" rel="footnote">4</a></sup> provides easy common configuration for homelab and non-enterprise users. It can be ran with:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>bash <span class="nt">-c</span> <span class="s2">"</span><span class="si">$(</span>curl <span class="nt">-fsSL</span> https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/post-pve-install.sh<span class="si">)</span><span class="s2">"</span>
+</code></pre></div></div>
+
+<p>Here is the options I like to use:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>disable pve-enterprise, ceph enterprise
+add pve no subscription
+do not add disabled pvetest
+disable subscription nag yes
+disable HA (high availability) yes
+disable corosync yes
+</code></pre></div></div>
+
+<h2 id="swap">Swap</h2>
+
+<p>Now I configure swap space. I like to configure a lot of swap, as my server is almost permanently out of memory and I cannot afford more RAM right now (wtaf are DRAM prices?).</p>
+
+<p>First, <code class="language-plaintext highlighter-rouge">zram</code> (compressed swap space in memory):</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt <span class="nb">install </span>zram-tools
+<span class="nb">cp</span> /etc/default/zramswap<span class="o">{</span>,.bak<span class="o">}</span>
+nano /etc/default/zramswap
+<span class="c"># PERCENT=20</span>
+</code></pre></div></div>
+
+<p>Then create a new swap partition using <code class="language-plaintext highlighter-rouge">cgdisk</code> or your favourite partition management tool:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>cgdisk /dev/nvme1n1
+mkswap /dev/nvme1n1p1
+swapon /dev/nvme1n1p1
+<span class="c"># Get uuid</span>
+blkid /dev/nvme1n1p1
+<span class="c"># Make it permanent</span>
+nano /etc/fstab
+<span class="c"># UUID=aabbccdd       none    swap    sw      0       0</span>
+</code></pre></div></div>
+
+<p>And adjust swappiness <sup id="fnref:pvewikiswappiness" role="doc-noteref"><a href="#fn:pvewikiswappiness" class="footnote" rel="footnote">5</a></sup> as desired:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@pve:~# cat /etc/sysctl.d/99-swappiness.conf
+vm.swappiness = 15
+</code></pre></div></div>
+
+<h2 id="software-defined-networking">Software-Defined Networking</h2>
+
+<p>SDN <sup id="fnref:proxwikisdn:1" role="doc-noteref"><a href="#fn:proxwikisdn" class="footnote" rel="footnote">3</a></sup> is a powerful feature of Proxmox which allows you to create virtual zones and networks, and configure firewall rules across the entire cluster. Of course, many of these features are less useful for a single-node setup, and everything I do here should still be possible with traditional tools and utils on a single node, but I prefer this way.</p>
+
+<h3 id="masquerading-nat-with-nftables">Masquerading (NAT) with nftables</h3>
+
+<p>Having guests on a bridge network, such that a single NIC has multiple MAC addresses associated with it isn’t always supported everywhere, nor is it “best practice”. We can instead use a source-NAT (SNAT) configuration.</p>
+
+<p>Most of my configuration is derived from this wiki article <sup id="fnref:pvewikisnat" role="doc-noteref"><a href="#fn:pvewikisnat" class="footnote" rel="footnote">6</a></sup>.</p>
+
+<p>First, install dnsmasq, which is currently the only DHCP server supported by Proxmox SDN:</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>apt update
+apt <span class="nb">install </span>dnsmasq
+<span class="c"># disable default instance</span>
+systemctl disable <span class="nt">--now</span> dnsmasq
+</code></pre></div></div>
+
+<p>Then under <code class="language-plaintext highlighter-rouge">Datacenter -&gt; SDN -&gt; Zones</code>, add a simple zone with some name. I choose <code class="language-plaintext highlighter-rouge">dhcpsnat</code>. Other options can be left untouched.</p>
+
+<p>Under <code class="language-plaintext highlighter-rouge">Datacenter -&gt; SDN -&gt; VNets</code>, add a vnet and assign it to the zone. Select the newly created vnet and, in the right panel, create a subnet. Note that the <code class="language-plaintext highlighter-rouge">DNS Zone Prefix</code> option does nothing unless PowerDNS is configured, which is likely beyond the scope of most users. Also add a DHCP range.</p>
+
+<p>Apply the config in <code class="language-plaintext highlighter-rouge">Datacenter -&gt; SDN</code> now, so the firewall menu shows autocompletions for hosts.</p>
+
+<h4 id="firewall">Firewall</h4>
+
+<p>In <code class="language-plaintext highlighter-rouge">Datacenter -&gt; Firewall</code> we define rules to allow DNS and DHCP traffic. One slight amendment to the wiki <sup id="fnref:pvewikisnat:1" role="doc-noteref"><a href="#fn:pvewikisnat" class="footnote" rel="footnote">6</a></sup>, we can use the destination <code class="language-plaintext highlighter-rouge">+vnet0-gateway</code> for the destination of the DNS rule. This means the rule will automatically update if the gateway IP from the vnet config is changed.</p>
+
+<p><img src="/assets/images/2026-01-17-pve/dnsrule.png" alt="DNS rule" /></p>
+
+<p>There is also one more caveat to all of this. The SDN config will probably break (I have not tested this) if the node itself does not have a static DHCP lease. This is due to the iptables commands in <code class="language-plaintext highlighter-rouge">/etc/network/interfaces.d/sdn</code> having a hard-coded <code class="language-plaintext highlighter-rouge">to-source</code> IP.</p>
+
+<p>Finally, two more things we want to do: first, set <code class="language-plaintext highlighter-rouge">Host -&gt; Firewall -&gt; Options -&gt; nftables</code> to use the new <code class="language-plaintext highlighter-rouge">proxmox-firewall</code> <sup id="fnref:pvewikinftablesfirewall" role="doc-noteref"><a href="#fn:pvewikinftablesfirewall" class="footnote" rel="footnote">7</a></sup>, and finally set <code class="language-plaintext highlighter-rouge">Datacenter -&gt; Firewall -&gt; Options -&gt; Firewall</code>.</p>
+
+<h4 id="port-forwarding">Port Forwarding</h4>
+
+<p>Currently I use the following nftables configuration, though I do not like the destination IP address being hard-coded here. This works for now, but I would be interested to hear if anyone has a better solution.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@pve:~# cat /etc/nftables.conf
+#!/usr/sbin/nft -f
+
+flush ruleset
+
+table ip nat {
+	chain prerouting {
+		type nat hook prerouting priority dstnat; policy accept;
+		iifname "vmbr0" udp dport 51820 dnat to 10.10.10.51:51820
+		iifname "vmbr0" tcp dport 80 dnat to 10.10.10.52:80
+		iifname "vmbr0" tcp dport 443 dnat to 10.10.10.52:443
+		iifname "vmbr0" tcp dport 636 dnat to 10.10.10.52:636
+	}
+
+	chain postrouting {
+		type nat hook postrouting priority srcnat; policy accept;
+		oifname "vnet0" masquerade
+	}
+}
+</code></pre></div></div>
+
+<p>Finally we enable forwarding:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@pve:~# cat /etc/sysctl.d/99-ipforward.conf
+net.ipv4.ip_forward=1
+</code></pre></div></div>
+
+<p>And enable &amp; start nftables.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code>systemctl <span class="nb">enable</span> <span class="nt">--now</span> nftables.service
+</code></pre></div></div>
+
+<h4 id="dnsmasq">dnsmasq</h4>
+
+<p>A small improvement we can make to the DHCP server for the zone:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>root@pve:~# cat /etc/dnsmasq.d/dhcpsnat/20-domain-override.conf
+domain=cube.thomasaldrian.net
+</code></pre></div></div>
+
+<p>Where <code class="language-plaintext highlighter-rouge">dhcpsnat</code> is the name of the zone we created earlier. This allows guests on the SNAT network to resolve other guests by e.g. <code class="language-plaintext highlighter-rouge">truenas.cube.thomasaldrian.net</code>.</p>
+
+<p>See this forum post <sup id="fnref:pveforumdnsmasqconf" role="doc-noteref"><a href="#fn:pveforumdnsmasqconf" class="footnote" rel="footnote">8</a></sup> for more info.</p>
+
+<h2 id="logging-in-with-oidc">Logging in with OIDC</h2>
+
+<p>I use Kanidm <sup id="fnref:kanidm" role="doc-noteref"><a href="#fn:kanidm" class="footnote" rel="footnote">9</a></sup> to provide SSO via OpenID Connect (OIDC) for almost all my services. For convenience, I also integrate it with Proxmox.</p>
+
+<p>I will not describe how to set up and configure Kanidm here, though there may be a blog post about that coming soon(TM). For now, here <sup id="fnref:kanidmoidc" role="doc-noteref"><a href="#fn:kanidmoidc" class="footnote" rel="footnote">10</a></sup> is a ChatGPT-ed :( guide. On the PVE side:</p>
+
+<p>In <code class="language-plaintext highlighter-rouge">Datacenter -&gt; Permissions -&gt; Realms</code>, add a new <code class="language-plaintext highlighter-rouge">OpenID Connect Server</code>:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Issuer URL: https://idm.example.net/oauth2/openid/&lt;client id&gt;
+Realm: kanidm (used only by Proxmox)
+Client ID: &lt;client id&gt;
+Client Key: &lt;basic secret&gt;
+Scopes: openid email profile (not using groups, as I have a custom claim instead)
+Autocreate Users: yes
+Username Claim: username
+Autocreate Groups: yes
+Groups Claim: proxmox_role
+Overwrite Groups: yes (preference)
+Default: yes
+Comment: Login with CubeIDM (shown to user on login screen)
+</code></pre></div></div>
+
+<p>And in <code class="language-plaintext highlighter-rouge">Datacenter -&gt; Permissions</code>, add group permissions:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Path /
+Group admins-kanidm
+Role Administrator
+
+Path /
+Group users-kanidm
+Role PVEAuditor
+</code></pre></div></div>
+
+<h1 id="guest-vms-and-containers">Guest VMs and containers</h1>
+
+<p>I am deliberately leaving out a lot here for future posts. However, I will mention Home Assistant because of some specific pain points with it.</p>
+
+<h2 id="home-assistant">Home Assistant</h2>
+
+<p>Home Assistant OS (HAOS) does not provide an installer for x64 targets, only a disk image. This must be imported using <code class="language-plaintext highlighter-rouge">qm importdisk</code> and cannot currently be done via the Proxmox web UI.</p>
+
+<div class="language-sh highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nb">cd</span> /tmp/
+wget https://github.com/home-assistant/operating-system/releases/download/16.0/haos_ova-16.0.qcow2.xz
+unxz haos_ova-16.0.qcow2.xz
+qm importdisk 410 /tmp/haos_ova-16.0.qcow2 local-zfs
+</code></pre></div></div>
+
+<hr />
+
+<div class="footnotes" role="doc-endnotes">
+  <ol>
+    <li id="fn:zfsswapvol" role="doc-endnote">
+      <p><a href="https://github.com/openzfs/zfs/issues/7734">https://github.com/openzfs/zfs/issues/7734</a> <a href="#fnref:zfsswapvol" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:dhcpfreepmx" role="doc-endnote">
+      <p><a href="https://free-pmx.org/guides/dhcp-single/">https://free-pmx.org/guides/dhcp-single/</a> <a href="#fnref:dhcpfreepmx" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:proxwikisdn" role="doc-endnote">
+      <p><a href="https://pve.proxmox.com/wiki/Software-Defined_Network">https://pve.proxmox.com/wiki/Software-Defined_Network</a> <a href="#fnref:proxwikisdn" class="reversefootnote" role="doc-backlink">&#8617;</a> <a href="#fnref:proxwikisdn:1" class="reversefootnote" role="doc-backlink">&#8617;<sup>2</sup></a></p>
+    </li>
+    <li id="fn:pvepostinstallscript" role="doc-endnote">
+      <p><a href="https://community-scripts.github.io/ProxmoxVE/scripts?id=post-pve-install">https://community-scripts.github.io/ProxmoxVE/scripts?id=post-pve-install</a> <a href="#fnref:pvepostinstallscript" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:pvewikiswappiness" role="doc-endnote">
+      <p><a href="https://pve.proxmox.com/wiki/ZFS_on_Linux#zfs_swap">https://pve.proxmox.com/wiki/ZFS_on_Linux#zfs_swap</a> <a href="#fnref:pvewikiswappiness" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:pvewikisnat" role="doc-endnote">
+      <p><a href="https://pve.proxmox.com/wiki/Setup_Simple_Zone_With_SNAT_and_DHCP">https://pve.proxmox.com/wiki/Setup_Simple_Zone_With_SNAT_and_DHCP</a> <a href="#fnref:pvewikisnat" class="reversefootnote" role="doc-backlink">&#8617;</a> <a href="#fnref:pvewikisnat:1" class="reversefootnote" role="doc-backlink">&#8617;<sup>2</sup></a></p>
+    </li>
+    <li id="fn:pvewikinftablesfirewall" role="doc-endnote">
+      <p><a href="https://pve.proxmox.com/wiki/Firewall#pve_firewall_nft">https://pve.proxmox.com/wiki/Firewall#pve_firewall_nft</a> <a href="#fnref:pvewikinftablesfirewall" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:pveforumdnsmasqconf" role="doc-endnote">
+      <p><a href="https://forum.proxmox.com/threads/how-to-resolve-hostnames-of-snat-from-proxmox-node-itself.153239/">https://forum.proxmox.com/threads/how-to-resolve-hostnames-of-snat-from-proxmox-node-itself.153239/</a> <a href="#fnref:pveforumdnsmasqconf" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:kanidm" role="doc-endnote">
+      <p><a href="https://github.com/kanidm/kanidm">https://github.com/kanidm/kanidm</a> <a href="#fnref:kanidm" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:kanidmoidc" role="doc-endnote">
+      <p><a href="https://github.com/kanidm/kanidm/discussions/3860">https://github.com/kanidm/kanidm/discussions/3860</a> <a href="#fnref:kanidmoidc" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+        
+      </section>
+
+      <footer class="page__meta">
+        
+        
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-tags" aria-hidden="true"></i> Tags: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/tags/homelab" class="page__taxonomy-item" rel="tag">Homelab</a><span class="sep">, </span>
+    
+      <a href="/tags/nas" class="page__taxonomy-item" rel="tag">NAS</a><span class="sep">, </span>
+    
+      <a href="/tags/proxmox" class="page__taxonomy-item" rel="tag">Proxmox</a>
+    
+    </span>
+  </p>
+
+
+
+
+  
+
+
+  
+
+  <p class="page__taxonomy">
+    <strong><i class="fas fa-fw fa-folder-open" aria-hidden="true"></i> Categories: </strong>
+    <span itemprop="keywords">
+    
+      <a href="/categories/homelab" class="page__taxonomy-item" rel="tag">homelab</a>
+    
+    </span>
+  </p>
+
+
+        
+
+  <p class="page__date"><strong><i class="fas fa-fw fa-calendar-alt" aria-hidden="true"></i> Updated:</strong> <time datetime="2026-01-17T00:00:00+00:00">January 17, 2026</time></p>
+
+
+      </footer>
+
+      <section class="page__share">
+  
+    <h4 class="page__share-title">Share on..</h4>
+  
+
+  <a href="https://twitter.com/intent/tweet?text=My+homelab+setup%3A+Proxmox+VE%20https%3A%2F%2Fweissnix4711.github.io%2Fhomelab%2F2026%2F01%2F17%2Fpve%2F" class="btn btn--twitter" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on.. Twitter"><i class="fab fa-fw fa-twitter" aria-hidden="true"></i><span> Twitter</span></a>
+
+  <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fweissnix4711.github.io%2Fhomelab%2F2026%2F01%2F17%2Fpve%2F" class="btn btn--facebook" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on.. Facebook"><i class="fab fa-fw fa-facebook" aria-hidden="true"></i><span> Facebook</span></a>
+
+  <a href="https://www.linkedin.com/shareArticle?mini=true&url=https%3A%2F%2Fweissnix4711.github.io%2Fhomelab%2F2026%2F01%2F17%2Fpve%2F" class="btn btn--linkedin" onclick="window.open(this.href, 'window', 'left=20,top=20,width=500,height=500,toolbar=1,resizable=0'); return false;" title="Share on.. LinkedIn"><i class="fab fa-fw fa-linkedin" aria-hidden="true"></i><span> LinkedIn</span></a>
+</section>
+
+
+      
+  <nav class="pagination">
+    
+      <a href="/homelab/2024/05/14/dell-h310-it-mode/" class="pagination--pager" title="Dell PERC H310 raid card flashed to IT Mode
+">Previous</a>
+    
+    
+      <a href="#" class="pagination--pager disabled">Next</a>
+    
+  </nav>
+
+    </div>
+
+    
+      <div class="page__comments">
+  
+  
+      <h4 class="page__comments-title">Comments</h4>
+      <section id="utterances-comments"></section>
+    
+</div>
+
+    
+  </article>
+
+  
+  
+    <div class="page__related">
+      <h4 class="page__related-title">You May Also Enjoy</h4>
+      <div class="grid__wrapper">
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/homelab/2024/05/14/dell-h310-it-mode/" rel="permalink">Dell PERC H310 raid card flashed to IT Mode
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          6 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Guide to flashing the Dell PERC H310 card to IT Mode
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/teardown/2023/12/27/pinephone-battery-charger/" rel="permalink">PinePhone (Pro) Battery Charger Teardown
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          less than 1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">Teardown of the Pine64 Pinephone standalone battery charger
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/linux-mobile/2023/03/06/dnscrypt/" rel="permalink">DNSCrypt + Dnsmasq setup with Waydroid
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          1 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">A short and simple guide to setting up DNSCrypt and dnsmasq.
+</p>
+  </article>
+</div>
+
+        
+          
+
+
+
+<div class="grid__item">
+  <article class="archive__item" itemscope itemtype="https://schema.org/CreativeWork">
+    
+    <h2 class="archive__item-title no_toc" itemprop="headline">
+      
+        <a href="/smart-home/2022/08/30/hass-cctv/" rel="permalink">My Home Assistant CCTV camera setup
+</a>
+      
+    </h2>
+    
+
+  <p class="page__meta">
+    
+
+    
+
+    
+      
+      
+
+      <span class="page__meta-readtime">
+        <i class="far fa-clock" aria-hidden="true"></i>
+        
+          3 minute read
+        
+      </span>
+    
+  </p>
+
+
+    <p class="archive__item-excerpt" itemprop="description">A guide to setting up ESPHome-based cameras with both Home Assistant and motionEye.
+</p>
+  </article>
+</div>
+
+        
+      </div>
+    </div>
+  
+  
+</div>
+
+    </div>
+
+    
+      <div class="search-content">
+        <div class="search-content__inner-wrap"><form class="search-content__form" onkeydown="return event.key != 'Enter';">
+    <label class="sr-only" for="search">
+      Enter your search term...
+    </label>
+    <input type="search" id="search" class="search-input" tabindex="-1" placeholder="Enter your search term..." />
+  </form>
+  <div id="results" class="results"></div></div>
+
+      </div>
+    
+
+    <div id="footer" class="page__footer">
+      <footer>
+        <!-- start custom footer snippets -->
+
+<!-- end custom footer snippets -->
+        <div class="page__footer-follow">
+  <ul class="social-icons">
+    
+
+    
+      
+        
+          <li><a href="https://github.com/Weissnix4711/weissnix4711.github.io" rel="nofollow noopener noreferrer"><i class="fab fa-fw fa-github" aria-hidden="true"></i> GitHub</a></li>
+        
+      
+    
+
+    
+      <li><a href="/feed.xml"><i class="fas fa-fw fa-rss-square" aria-hidden="true"></i> Feed</a></li>
+    
+  </ul>
+</div>
+
+<div class="page__footer-copyright">&copy; 2026 Thomas Aldrian. Powered by <a href="https://jekyllrb.com" rel="nofollow">Jekyll</a> &amp; <a href="https://mademistakes.com/work/minimal-mistakes-jekyll-theme/" rel="nofollow">Minimal Mistakes</a>.</div>
+
+      </footer>
+    </div>
+
+    
+  <script src="/assets/js/main.min.js"></script>
+
+
+
+
+<script src="/assets/js/lunr/lunr.min.js"></script>
+<script src="/assets/js/lunr/lunr-store.js"></script>
+<script src="/assets/js/lunr/lunr-en.js"></script>
+
+
+
+
+    <script>
+  'use strict';
+
+  (function() {
+    var commentContainer = document.querySelector('#utterances-comments');
+
+    if (!commentContainer) {
+      return;
+    }
+
+    var script = document.createElement('script');
+    script.setAttribute('src', 'https://utteranc.es/client.js');
+    script.setAttribute('repo', 'weissnix4711/weissnix4711.github.io');
+    script.setAttribute('issue-term', 'pathname');
+    script.setAttribute('theme', 'github-dark');
+    script.setAttribute('crossorigin', 'anonymous');
+
+    commentContainer.appendChild(script);
+  })();
+</script>
+
+  
+
+
+
+
+
+  </body>
+</html>
